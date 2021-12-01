@@ -232,8 +232,9 @@ $Script:EventTypeMapping = @{
     [UInt32] 13 = 'EV_IPL'                   # The digest field contains the SHA-1 hash of the IPL Code. The event field SHOULD NOT contain the actual IPL Code but MAY contain informative information about the IPL Code. Note: The digest may not cover the entire area hosting the IPL Image, but only the portion that contains the IPL Code. For example, if the IPL Image is a disk drive MBR, this MUST NOT include the portion of the MBR that contains the disk geometry.
     [UInt32] 14 = 'EV_IPL_PARTITION_DATA'    # The data and partition portion of the IPL Image.
     [UInt32] 15 = 'EV_NONHOST_CODE'          # The executable component of any Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
-    [UInt32] 16 = 'EV-NONHOST_CONFIG'        # The parameters associated with a Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
+    [UInt32] 16 = 'EV_NONHOST_CONFIG'        # The parameters associated with a Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
     [UInt32] 17 = 'EV_NONHOST_INFO'          # The event is information about the presence of a Non-host Platform. This information could be, but is not required to be, information such as the Non-host Platform manufacturer, model, type, version, etc. The information and formatting is to be determined by the BIOS.
+    [UInt32] 0x00000012 = 'EV_OMIT_BOOT_DEVICE_EVENTS'
     [UInt32] (2147483648 + 1) = 'EV_EFI_VARIABLE_DRIVER_CONFIG'    # EFI variables, either defined in the EFI spec or private, that typically do not change from boot-to-boot and contain system configuration information.
     [UInt32] (2147483648 + 2) = 'EV_EFI_VARIABLE_BOOT'             # This event is used to measure boot variables. The event field MUST contain a UEFI_VARIABLE_DATA structure
     [UInt32] (2147483648 + 3) = 'EV_EFI_BOOT_SERVICES_APPLICATION' # EFI application (e.g. EFI OSLoader)
@@ -243,8 +244,46 @@ $Script:EventTypeMapping = @{
     [UInt32] (2147483648 + 7) = 'EV_EFI_ACTION'                    # Measurement of a specific string value that indicates a specific event occurred during the platform or OS boot process.
     [UInt32] (2147483648 + 8) = 'EV_EFI_PLATFORM_FIRMWARE_BLOB'    # The event MUST contain a UEFI_PLATFORM_FIRMWARE_BLOB structure
     [UInt32] (2147483648 + 9) = 'EV_EFI_HANDOFF_TABLES'            # Describes the measurement of industry-standard tables and data structure regions.
-    [UInt32] (2147483648 + 0x0A) = 'EV_EFI_HCRTM_EVENT'            # This event is used to record an event for the digest extended to PCR[0] as part of an H-CRTM event.
-    [UInt32] (2147483648 + 0xE0) = 'EV_EFI_VARIABLE_AUTHORITY'     # Documented here: https://docs.microsoft.com/en-us/windows-hardware/test/hlk/testref/trusted-execution-environment-efi-protocol
+    [UInt32] 0x8000000Al = 'EV_EFI_PLATFORM_FIRMWARE_BLOB2'
+    [UInt32] 0x8000000Bl = 'EV_EFI_HANDOFF_TABLES2'
+    [UInt32] 0x80000010l = 'EV_EFI_HCRTM_EVENT'            # This event is used to record an event for the digest extended to PCR[0] as part of an H-CRTM event.
+    [UInt32] 0x800000E0l = 'EV_EFI_VARIABLE_AUTHORITY'     # Documented here: https://docs.microsoft.com/en-us/windows-hardware/test/hlk/testref/trusted-execution-environment-efi-protocol
+    [UInt32] 0x800000E1l = 'EV_EFI_SPDM_FIRMWARE_BLOB'
+    [UInt32] 0x800000E2l = 'EV_EFI_SPDM_FIRMWARE_CONFIG'
+    #----------------------------------PCR Event Types for Intel TXT
+    [UInt32] 0x00000400l = 'EV_TXT_EVENT_BASE'
+    [UInt32] 0x00000401l = 'EV_TXT_PCR_MAPPING'
+    [UInt32] 0x00000402l = 'EV_TXT_HASH_START'
+    [UInt32] 0x00000403l = 'EV_TXT_COMBINED_HASH'
+    [UInt32] 0x00000404l = 'EV_TXT_MLE_HASH'
+    [UInt32] 0x0000040Al = 'EV_TXT_BIOSAC_REG_DATA'
+    [UInt32] 0x0000040Bl = 'EV_TXT_CPU_SCRTM_STAT'
+    [UInt32] 0x0000040Cl = 'EV_TXT_LCP_CONTROL_HASH'
+    [UInt32] 0x0000040Dl = 'EV_TXT_ELEMENTS_HASH'
+    [UInt32] 0x0000040El = 'EV_TXT_STM_HASH'
+    [UInt32] 0x0000040Fl = 'EV_TXT_OSSINITDATA_CAP_HASH'
+    [UInt32] 0x00000410l = 'EV_TXT_SINIT_PUBKEY_HASH'
+    [UInt32] 0x00000411l = 'EV_TXT_LCP_HASH'
+    [UInt32] 0x00000412l = 'EV_TXT_LCP_DETAILS_HASH'
+    [UInt32] 0x00000413l = 'EV_TXT_LCP_AUTHORITIES_HASH'
+    [UInt32] 0x00000414l = 'EV_TXT_NV_INFO_HASH'
+    [UInt32] 0x00000415l = 'EV_TXT_COLD_BOOT_BIOS_HASH'
+    [UInt32] 0x00000416l = 'EV_TXT_KM_HASH'
+    [UInt32] 0x00000417l = 'EV_TXT_BPM_HASH'
+    [UInt32] 0x00000418l = 'EV_TXT_KM_INFO_HASH'
+    [UInt32] 0x00000419l = 'EV_TXT_BPM_INFO_HASH'
+    [UInt32] 0x0000041Al = 'EV_TXT_BOOT_POL_HASH'
+    [UInt32] 0x000004FEl = 'EV_TXT_RANDOM_VALUE'
+    [UInt32] 0x000004FFl = 'EV_TXT_CAP_VALUE'
+    #----------------------------------PCR Event Types for AMD SecureLaunch
+    [UInt32] 0x00008000l = 'EV_AMD_SL_EVENT_BASE'
+    [UInt32] 0x00008001l = 'EV_AMD_SL_LOAD'
+    [UInt32] 0x00008002l = 'EV_AMD_SL_PSP_FW_SPLT'
+    [UInt32] 0x00008003l = 'EV_AMD_SL_TSME_RB_FUSE'
+    [UInt32] 0x00008004l = 'EV_AMD_SL_PUB_KEY'
+    [UInt32] 0x00008005l = 'EV_AMD_SL_SVN'
+    [UInt32] 0x00008006l = 'EV_AMD_SL_LOAD_1'
+    [UInt32] 0x00008007l = 'EV_AMD_SL_SEPARATOR'
 }
 
 $Script:DigestSizeMapping = @{
@@ -1109,7 +1148,7 @@ Outputs a parsed TCG log.
                 $Digests[$i] = [BitConverter]::ToString($BinaryReader.ReadBytes($DigestSize)).Replace('-', '')
             }
         }
-        
+
 
         $EventSize = $BinaryReader.ReadUInt32()
 
@@ -1759,6 +1798,12 @@ Outputs a parsed TCG log.
         PCR14 = (New-Object 'System.Collections.Generic.List[PSObject]')
         PCR15 = (New-Object 'System.Collections.Generic.List[PSObject]')
         PCR16 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR17 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR18 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR19 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR20 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR21 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR22 = (New-Object 'System.Collections.Generic.List[PSObject]')
         PCR23 = (New-Object 'System.Collections.Generic.List[PSObject]')
         PCRMinusOne = (New-Object 'System.Collections.Generic.List[PSObject]')
     }
