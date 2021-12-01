@@ -85,6 +85,11 @@ $Script:SIPAEventMapping = @{
     0x40010005 = 'KSRAggregation'                  # SIPAEVENT_KSR_AGGREGATION
     0x40010006 = 'KSRSignedMeasurementAggregation' # SIPAEVENT_KSR_SIGNED_MEASUREMENT_AGGREGATION
 
+    # SIPAEVENTTYPE_ERROR
+    0x00030001 = 'ErrorFirmwareFailure'
+    0x80030002 = 'ErrorTPMFailure'
+    0x00030003 = 'ErrorInternalFailure'
+
     # SIPAEVENTTYPE_INFORMATION
     0x00020001 = 'Information'         # SIPAEVENT_INFORMATION
     0x00020002 = 'BootCounter'         # SIPAEVENT_BOOTCOUNTER
@@ -122,6 +127,7 @@ $Script:SIPAEventMapping = @{
     0x00050011 = 'HypervisorMSRFilterPolicy' # SIPAEVENT_HYPERVISOR_MSR_FILTER_POLICY
     0x00050012 = 'VSMLaunchType'             # SIPAEVENT_VSM_LAUNCH_TYPE
     0x00050013 = 'OSRevocationList'          # SIPAEVENT_OS_REVOCATION_LIST
+    0x00050014 = 'SMTStatus'
     0x00050020 = 'VSMIDKInfo'                # SIPAEVENT_VSM_IDK_INFO
     0x00050021 = 'FlightSigning'             # SIPAEVENT_FLIGHTSIGNING
     0x00050022 = 'PagefileEncryptionEnabled' # SIPAEVENT_PAGEFILE_ENCRYPTION_ENABLED
@@ -131,6 +137,8 @@ $Script:SIPAEventMapping = @{
     0x00050026 = 'DumpEncryptionEnabled'     # SIPAEVENT_DUMP_ENCRYPTION_ENABLED
     0x00050027 = 'DumpEncryptionKeyDigest'   # SIPAEVENT_DUMP_ENCRYPTION_KEY_DIGEST
     0x00050028 = 'LSAISOConfig'              # SIPAEVENT_LSAISO_CONFIG
+    0x00050029 = 'SBCPInfo'
+    0x00050030 = 'HypervisorBootDMAProtection'
 
     # SIPAEVENTTYPE_AUTHORITY
     0x00060001 = 'NoAuthority'               # SIPAEVENT_NOAUTHORITY
@@ -170,9 +178,17 @@ $Script:SIPAEventMapping = @{
     0x000A0006 = 'VBSMandatoryEnforcement'       # SIPAEVENT_VBS_MANDATORY_ENFORCEMENT
     0x000A0007 = 'VBSHVCIPolicy'                 # SIPAEVENT_VBS_HVCI_POLICY
     0x000A0008 = 'VBSMicrosoftBootChainRequired' # SIPAEVENT_VBS_MICROSOFT_BOOT_CHAIN_REQUIRED
+    0x000A0009 = 'VBSDumpUsesAMERoot'
+    0x000A000A = 'VBSVSMNosecretsEnforced'
 
     # SIPAEVENTTYPE_KSR
     0x000B0001 = 'KSRSignature'                  # SIPAEVENT_KSR_SIGNATURE
+
+    # SIPAEVENTTYPE_DRTM
+    0x000C0001 = 'DRTMStateAuth'
+    0x000C0002 = 'DRTMSMMLevel'
+    0x000C0003 = 'DRTMAMDSMMHash'
+    0x000C0004 = 'DRTMAMDSMMSignerKey'
 }
 
 $Script:DigestAlgorithmMapping = @{
@@ -411,6 +427,7 @@ function Get-SIPAEventData {
                         HypervisorMSRFilterPolicy = $null
                         VSMLaunchType = $null
                         OSRevocationList = $null
+                        SMTStatus = $null
                         VSMIDKInfo = $null
                         FlightSigning = $null
                         PagefileEncryptionEnabled = $null
@@ -420,6 +437,8 @@ function Get-SIPAEventData {
                         DumpEncryptionEnabled = $null
                         DumpEncryptionKeyDigest = $null
                         LSAISOConfig = $null
+                        SBCPInfo = $null
+                        HypervisorBootDMAProtection = $null
                     }
 
                     $VBSTemplate = @{
@@ -431,6 +450,8 @@ function Get-SIPAEventData {
                         VBSMandatoryEnforcement = $null
                         VBSHVCIPolicy = $null
                         VBSMicrosoftBootChainRequired = $null
+                        VBSDumpUsesAMERoot = $null
+                        VBSVSMNosecretsEnforced = $null
                     }
 
                     $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
@@ -679,7 +700,7 @@ function Get-SIPAEventData {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
 
                     # I haven't spent time to determine how to translate the creation time yet.
-                    $CreationTime = [BitConverter]::ToUInt64($EventBytes, 0)
+                    $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0))
                     $DigestLength = [BitConverter]::ToUInt32($EventBytes, 8)
                     $HashAlgorithm = $DigestAlgorithmMapping[[BitConverter]::ToUInt16($EventBytes, 0x0C)]
                     $Digest = [BitConverter]::ToString($EventBytes[0x0E..(0x0E + $DigestLength - 1)]).Replace('-', '')
@@ -779,6 +800,47 @@ function Get-SIPAEventData {
                 'ELAMMeasured'                  { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
                 'ELAMConfiguration'             { $EventData = $EventBytes; $Category = 'ELAM' }
                 'ELAMPolicy'                    { $EventData = $EventBytes; $Category = 'ELAM' }
+
+                'KSRSignature' {
+                    # SIPAEVENT_REVOCATION_LIST_PAYLOAD
+
+                    $Category = 'KSR'
+
+                    $SignatureLength = [BitConverter]::ToUInt32($EventBytes, 4)
+                    [Byte[]] $Signature = $EventBytes[8..(8 + $SignatureLength - 1)]
+
+                    $EventData = [PSCustomObject] @{
+                        SignAlgID = [BitConverter]::ToUInt32($EventBytes, 0)
+                        SignatureLength = $SignatureLength
+                        Signature = ($Signature | ForEach-Object {$_.ToString('X2')}) -join ':'
+                    }
+                }
+
+                'SBCPInfo' {
+                    $Category = 'SBCP'
+                    $PayloadVersion = [BitConverter]::ToUInt32($EventBytes, 0)
+
+                    switch ($PayloadVersion) {
+                        1 {
+                            # SIPAEVENT_SBCP_INFO_PAYLOAD_V1
+                            $HashAlgID = [BitConverter]::ToUInt16($EventBytes, 8)
+                            $DigestLength = [BitConverter]::ToUInt16($EventBytes, 10)
+                            [Byte[]] $DigestBytes = $EventBytes[20..(20 + $DigestLength - 1)]
+
+                            $EventData = [PSCustomObject] @{
+                                VarDataOffset = [BitConverter]::ToUInt32($EventBytes, 4)
+                                HashAlg = $DigestAlgorithmMapping[$HashAlgID]
+                                Options = [BitConverter]::ToUInt32($EventBytes, 12)
+                                SignersCount = [BitConverter]::ToUInt32($EventBytes, 16)
+                                Digest = [BitConverter]::ToString($DigestBytes).Replace('-', '')
+                            }
+                        }
+
+                        default {
+                            $EventData = $EventBytes
+                        }
+                    }
+                }
 
                 default {
                     $Category = 'Uncategorized'
