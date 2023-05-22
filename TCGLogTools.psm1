@@ -399,7 +399,7 @@ function Get-SIPAEventData {
             switch ($SIPAEventType) {
                 'NoAuthority' {
                     [PSCustomObject] @{
-                        Category = 'Authority'
+                        #Category = 'Authority'
                         SIPAEventType = $SIPAEventType
                         NoAuthority = $EventBytes
                     }
@@ -407,7 +407,7 @@ function Get-SIPAEventData {
 
                 'AuthorityPubKey' {
                     [PSCustomObject] @{
-                        Category = 'Authority'
+                        #Category = 'Authority'
                         SIPAEventType = $SIPAEventType
                         AuthorityPubKey = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
@@ -415,7 +415,7 @@ function Get-SIPAEventData {
             }
         } elseif (($SIPAEventTypeVal -band 0x000F0000) -eq $ContainerType) {
             [PSCustomObject] @{
-                Category = 'Container'
+                #Category = 'Container'
                 SIPAEventType = $SIPAEventType
                 SIPAEventData = Get-SIPAEventData -SIPAEventBytes $EventBytes
             }
