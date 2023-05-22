@@ -1214,18 +1214,18 @@ Outputs a parsed TCG log.
 
         $EventSize = $BinaryReader.ReadUInt32()
 
-        $Event = $null
+        $ThisEvent = $null
 
         # Parse specific event types. Event types that are not explicitly parsed will return a byte array of the contents.
         switch ($EventType) {
             'EV_S_CRTM_CONTENTS' {
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
-                $Event = [Text.Encoding]::ASCII.GetString($EventBytes).TrimEnd(@(0))
+                $ThisEvent = [Text.Encoding]::ASCII.GetString($EventBytes).TrimEnd(@(0))
             }
 
             'EV_POST_CODE' {
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
-                $Event = [Text.Encoding]::ASCII.GetString($EventBytes).TrimEnd(@(0))
+                $ThisEvent = [Text.Encoding]::ASCII.GetString($EventBytes).TrimEnd(@(0))
             }
 
             'EV_EFI_PLATFORM_FIRMWARE_BLOB' {
@@ -1237,7 +1237,7 @@ Outputs a parsed TCG log.
                 # chipsec_util.py mem read [BlobBase] [BlobLength] firmwareblob.bin
                 # What's dumped will likely be a firmware volume. I use UEFITool.exe to extract contents.
 
-                $Event = [PSCustomObject] @{
+                $ThisEvent = [PSCustomObject] @{
                     PSTypeName = 'TCGUEFIPlatformFirmwareBlob'
                     BlobBase = $BlobBase
                     BlobLength = $BlobLength
@@ -1248,7 +1248,7 @@ Outputs a parsed TCG log.
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
 
                 # These will be Windows-specific data structures
-                $Event = Get-SIPAEventData -SIPAEventBytes $EventBytes
+                $ThisEvent = Get-SIPAEventData -SIPAEventBytes $EventBytes
             }
 
             'EV_NO_ACTION' {
@@ -1256,9 +1256,9 @@ Outputs a parsed TCG log.
 
                 if ($PCRIndex -eq -1) {
                     # Extact TrustPoint information - used for log attestation
-                    $Event = Get-SIPAEventData -SIPAEventBytes $EventBytes
+                    $ThisEvent = Get-SIPAEventData -SIPAEventBytes $EventBytes
                 } else {
-                    $Event = $EventBytes
+                    $ThisEvent = $EventBytes
                 }
             }
 
@@ -1339,7 +1339,7 @@ Outputs a parsed TCG log.
                     }
                 }
 
-                $Event = [PSCustomObject] @{
+                $ThisEvent = [PSCustomObject] @{
                     EfiPartitionHeader = $EfiPartitionHeader
                     NumberOfPartitions = $NumberOfPartitions
                     Partitions = $Partitions
@@ -1352,9 +1352,9 @@ Outputs a parsed TCG log.
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
 
                 if ($PCRIndex -gt 11) {
-                    $Event = [Text.Encoding]::ASCII.GetString($EventBytes)
+                    $ThisEvent = [Text.Encoding]::ASCII.GetString($EventBytes)
                 } else {
-                    $Event = ($EventBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                    $ThisEvent = ($EventBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
                 }
             }
 
@@ -1386,7 +1386,7 @@ Outputs a parsed TCG log.
                     $VariableData = $SignatureDataBytes
                 }
 
-                $Event = [PSCustomObject] @{
+                $ThisEvent = [PSCustomObject] @{
                     PSTypeName = 'TCGUEFIVariable'
                     VariableGUID = $VariableName
                     VariableName = $UnicodeName
@@ -1459,7 +1459,7 @@ Outputs a parsed TCG log.
 
                 $VarBinaryReader.Close()
 
-                $Event = [PSCustomObject] @{
+                $ThisEvent = [PSCustomObject] @{
                     PSTypeName = 'TCGUEFIVariable'
                     VariableGUID = $VariableName
                     VariableName = $UnicodeName
@@ -1646,7 +1646,7 @@ Outputs a parsed TCG log.
                     }
                 }
 
-                $Event = [PSCustomObject] @{
+                $ThisEvent = [PSCustomObject] @{
                     ImageLocationInMemory = $ImageLocationInMemory
                     ImageLengthInMemory = $ImageLengthInMemory
                     ImageLinkTimeAddress = $ImageLinkTimeAddress
@@ -1656,7 +1656,7 @@ Outputs a parsed TCG log.
 
             'EV_EFI_ACTION' {
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
-                $Event = [Text.Encoding]::ASCII.GetString($EventBytes).TrimEnd(@(0))
+                $ThisEvent = [Text.Encoding]::ASCII.GetString($EventBytes).TrimEnd(@(0))
             }
 
             'EV_EFI_VARIABLE_BOOT' {
@@ -1818,7 +1818,7 @@ Outputs a parsed TCG log.
                     $VariableData = $BinaryReader.ReadBytes($VariableDataLength)
                 }
 
-                $Event = [PSCustomObject] @{
+                $ThisEvent = [PSCustomObject] @{
                     PSTypeName = 'TCGUEFIVariable'
                     VariableGUID = $VariableName
                     VariableName = $UnicodeName
@@ -1827,7 +1827,7 @@ Outputs a parsed TCG log.
             }
 
             default {
-                $Event = ($BinaryReader.ReadBytes($EventSize) | ForEach-Object {$_.ToString('X2')}) -join ':'
+                $ThisEvent = ($BinaryReader.ReadBytes($EventSize) | ForEach-Object {$_.ToString('X2')}) -join ':'
             }
         }
 
@@ -1835,7 +1835,7 @@ Outputs a parsed TCG log.
             PCR = $PCRIndex
             EventType = $EventType
             Digest = $Digests
-            Event = $Event
+            Event = $ThisEvent
         }
     }
 
