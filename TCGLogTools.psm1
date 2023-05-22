@@ -703,6 +703,186 @@ function Get-SIPAEventData {
     return $evs
 }
 
+function Get-EfiDevicePathProtocol {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [Byte[]]
+        $DevicePathBytes
+    )
+
+    if (!$DevicePathBytes.Count) {
+        return $null
+    }
+
+    $MoreToParse = $True
+    $FilePathEntryIndex = 0
+
+    $FilePathList = while ($MoreToParse) {
+        # Parse the EFI_DEVICE_PATH_PROTOCOL struct.
+
+        $DevicePathType = $DevicePathTypeMapping[$DevicePathBytes[$FilePathEntryIndex]]
+        $Length = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 2)
+        [Byte[]] $DataBytes = $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + $Length - 1)]
+
+        switch ($DevicePathType) {
+            'ACPI_DEVICE_PATH' {
+                $DeviceSubType = $ACPIDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+
+                switch ($DeviceSubType) {
+                    'ACPI_DP' {
+                        $HID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            HID = $HID # Device's PnP hardware ID stored in a numeric 32-bit
+                                        # compressed EISA-type ID. This value must match the
+                                        # corresponding _HID in the ACPI name space.
+                            UID = $UID # Unique ID that is required by ACPI if two devices have the
+                                        # same _HID. This value must also match the corresponding
+                                        # _UID/_HID pair in the ACPI name space.
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'ACPI_EXTENDED_DP' {
+                        $HID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+                        $CID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 8)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            HID = $HID
+                            UID = $UID
+                            CID = $CID # Device's compatible PnP hardware ID stored in a numeric
+                                        # 32-bit compressed EISA-type ID.
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'ACPI_ADR_DP' {
+                        $ADR = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            ADR = $ADR # For video output devices the value of this
+                                        # field comes from Table B-2 of the ACPI 3.0 specification.
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+                }
+            }
+
+            'MEDIA_DEVICE_PATH' {
+                $DeviceSubType = $MediaDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+
+                switch ($DeviceSubType) {
+                    'MEDIA_HARDDRIVE_DP' {
+                        $PartitionNumber = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $PartitionStart = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+                        $PartitionSize = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4 + 8)
+
+                        $SignatureIndex = $FilePathEntryIndex + 4 + 4 + 8 + 8
+                        [Byte[]] $SignatureBytes = $DevicePathBytes[$SignatureIndex..($SignatureIndex + 16 - 1)]
+                        $MBRType = @{ [Byte] 1 = 'MBR_TYPE_PCAT'; [Byte] 2 = 'MBR_TYPE_EFI_PARTITION_TABLE_HEADER' }[$DevicePathBytes[$SignatureIndex + 16]]
+                        $SignatureType = @{ [Byte] 0 = 'NO_DISK_SIGNATURE'; [Byte] 1 = 'SIGNATURE_TYPE_MBR'; [Byte] 2 = 'SIGNATURE_TYPE_GUID' }[$DevicePathBytes[$SignatureIndex + 16 + 1]]
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            PartitionNumber = $PartitionNumber
+                            PartitionStart = $PartitionStart
+                            PartitionSize = $PartitionSize
+                            Signature = ($SignatureBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                            MBRType = $MBRType
+                            SignatureType = $SignatureType
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+
+                    'MEDIA_FILEPATH_DP' {
+                        $PathName = [Text.Encoding]::Unicode.GetString($DataBytes).TrimEnd(@(0))
+                        $DeviceInfo = [PSCustomObject] @{ PathName = $PathName }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MEDIA_PIWG_FW_VOL_DP' {
+                        $DeviceInfo = [PSCustomObject] @{ FvName = [Guid] $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MEDIA_PIWG_FW_FILE_DP' {
+                        $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    default {
+                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+                        $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+                }
+            }
+
+            'END_DEVICE_PATH_TYPE' { }
+
+            default {
+                # Until other subtypes are added, just supply the bytes.
+                $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+
+                [PSCustomObject] @{
+                    Type = $DevicePathType
+                    SubType = $DeviceSubType
+                    Length = $Length
+                    Data = ($DataBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                }
+            }
+        }
+
+        $FilePathEntryIndex = $FilePathEntryIndex + $Length
+        $MoreToParse = $null -ne $DevicePathBytes[$FilePathEntryIndex]
+    }
+
+    return $FilePathList
+}
+
 function Get-TPMDeviceInfo {
 <#
 .SYNOPSIS
@@ -1324,170 +1504,7 @@ Outputs a parsed TCG log.
                 # Parse all the file list entries
                 if ($LengthOfDevicePath -gt 0) {
                     $DevicePathBytes = $EventBytes[32..(32 + $LengthOfDevicePath - 1)]
-                    $MoreToParse = $True
-                    $FilePathEntryIndex = 0
-
-                    $FilePathList = while ($MoreToParse) {
-                        # Parse the EFI_DEVICE_PATH_PROTOCOL struct.
-
-                        $DevicePathType = $DevicePathTypeMapping[$DevicePathBytes[$FilePathEntryIndex]]
-                        $Length = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 2)
-                        [Byte[]] $DataBytes = $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + $Length - 1)]
-
-                        switch ($DevicePathType) {
-                            'ACPI_DEVICE_PATH' {
-                                $DeviceSubType = $ACPIDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
-
-                                switch ($DeviceSubType) {
-                                    'ACPI_DP' {
-                                        $HID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
-                                        $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
-
-                                        $DeviceInfo = [PSCustomObject] @{
-                                            HID = $HID # Device's PnP hardware ID stored in a numeric 32-bit
-                                                       # compressed EISA-type ID. This value must match the
-                                                       # corresponding _HID in the ACPI name space.
-                                            UID = $UID # Unique ID that is required by ACPI if two devices have the
-                                                       # same _HID. This value must also match the corresponding
-                                                       # _UID/_HID pair in the ACPI name space.
-                                        }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-
-                                    'ACPI_EXTENDED_DP' {
-                                        $HID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
-                                        $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
-                                        $CID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 8)
-
-                                        $DeviceInfo = [PSCustomObject] @{
-                                            HID = $HID
-                                            UID = $UID
-                                            CID = $CID # Device's compatible PnP hardware ID stored in a numeric
-                                                       # 32-bit compressed EISA-type ID.
-                                        }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-
-                                    'ACPI_ADR_DP' {
-                                        $ADR = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
-
-                                        $DeviceInfo = [PSCustomObject] @{
-                                            ADR = $ADR # For video output devices the value of this
-                                                       # field comes from Table B-2 of the ACPI 3.0 specification.
-                                        }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-                                }
-                            }
-
-                            'MEDIA_DEVICE_PATH' {
-                                $DeviceSubType = $MediaDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
-
-                                switch ($DeviceSubType) {
-                                    'MEDIA_HARDDRIVE_DP' {
-                                        $PartitionNumber = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
-                                        $PartitionStart = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
-                                        $PartitionSize = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4 + 8)
-
-                                        $SignatureIndex = $FilePathEntryIndex + 4 + 4 + 8 + 8
-                                        [Byte[]] $SignatureBytes = $DevicePathBytes[$SignatureIndex..($SignatureIndex + 16 - 1)]
-                                        $MBRType = @{ [Byte] 1 = 'MBR_TYPE_PCAT'; [Byte] 2 = 'MBR_TYPE_EFI_PARTITION_TABLE_HEADER' }[$DevicePathBytes[$SignatureIndex + 16]]
-                                        $SignatureType = @{ [Byte] 0 = 'NO_DISK_SIGNATURE'; [Byte] 1 = 'SIGNATURE_TYPE_MBR'; [Byte] 2 = 'SIGNATURE_TYPE_GUID' }[$DevicePathBytes[$SignatureIndex + 16 + 1]]
-
-                                        $DeviceInfo = [PSCustomObject] @{
-                                            PartitionNumber = $PartitionNumber
-                                            PartitionStart = $PartitionStart
-                                            PartitionSize = $PartitionSize
-                                            Signature = ($SignatureBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
-                                            MBRType = $MBRType
-                                            SignatureType = $SignatureType
-                                        }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-
-
-                                    'MEDIA_FILEPATH_DP' {
-                                        $PathName = [Text.Encoding]::Unicode.GetString($DataBytes).TrimEnd(@(0))
-                                        $DeviceInfo = [PSCustomObject] @{ PathName = $PathName }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-
-                                    'MEDIA_PIWG_FW_VOL_DP' {
-                                        $DeviceInfo = [PSCustomObject] @{ FvName = [Guid] $DataBytes }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-
-                                    'MEDIA_PIWG_FW_FILE_DP' {
-                                        $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-
-                                    default {
-                                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
-                                        $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
-
-                                        [PSCustomObject] @{
-                                            Type = $DevicePathType
-                                            SubType = $DeviceSubType
-                                            DeviceInfo = $DeviceInfo
-                                        }
-                                    }
-                                }
-                            }
-
-                            'END_DEVICE_PATH_TYPE' { }
-
-                            default {
-                                # Until other subtypes are added, just supply the bytes.
-                                $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
-
-                                [PSCustomObject] @{
-                                    Type = $DevicePathType
-                                    SubType = $DeviceSubType
-                                    Length = $Length
-                                    Data = ($DataBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
-                                }
-                            }
-                        }
-
-                        $FilePathEntryIndex = $FilePathEntryIndex + $Length
-                        $MoreToParse = $null -ne $DevicePathBytes[$FilePathEntryIndex]
-                    }
+                    $FilePathList = Get-EfiDevicePathProtocol -DevicePathBytes $DevicePathBytes
                 }
 
                 $ThisEvent = [PSCustomObject] @{
@@ -1532,115 +1549,7 @@ Outputs a parsed TCG log.
                     $FilePathListEndIndex = $Index + $FilePathListLength - 1
                     # This will be of type: EFI_DEVICE_PATH_PROTOCOL
                     [Byte[]] $FilePathListBytes = $VariableDataBytes[$Index..$FilePathListEndIndex]
-                    $FilePathList = $null
-
-                    # Parse all the file list entries
-                    if ($FilePathListBytes.Count) {
-                        $MoreToParse = $True
-                        $FilePathEntryIndex = 0
-
-                        $FilePathList = while ($MoreToParse) {
-                            # Parse the EFI_DEVICE_PATH_PROTOCOL struct.
-
-                            $DevicePathType = $DevicePathTypeMapping[$FilePathListBytes[$FilePathEntryIndex]]
-                            $Length = [BitConverter]::ToUInt16($FilePathListBytes, $FilePathEntryIndex + 2)
-                            [Byte[]] $DataBytes = $FilePathListBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + $Length - 1)]
-
-                            switch ($DevicePathType) {
-                                'MEDIA_DEVICE_PATH' {
-                                    $DeviceSubType = $MediaDeviceSubTypeMapping[$FilePathListBytes[$FilePathEntryIndex + 1]]
-
-                                    switch ($DeviceSubType) {
-                                        'MEDIA_HARDDRIVE_DP' {
-                                            $PartitionNumber = [BitConverter]::ToUInt32($FilePathListBytes, $FilePathEntryIndex + 4 + 0)
-                                            $PartitionStart = [BitConverter]::ToUInt64($FilePathListBytes, $FilePathEntryIndex + 4 + 4)
-                                            $PartitionSize = [BitConverter]::ToUInt64($FilePathListBytes, $FilePathEntryIndex + 4 + 4 + 8)
-
-                                            $SignatureIndex = $FilePathEntryIndex + 4 + 4 + 8 + 8
-                                            [Byte[]] $SignatureBytes = $FilePathListBytes[$SignatureIndex..($SignatureIndex + 16 - 1)]
-                                            $MBRType = @{ [Byte] 1 = 'MBR_TYPE_PCAT'; [Byte] 2 = 'MBR_TYPE_EFI_PARTITION_TABLE_HEADER' }[$FilePathListBytes[$SignatureIndex + 16]]
-                                            $SignatureType = @{ [Byte] 0 = 'NO_DISK_SIGNATURE'; [Byte] 1 = 'SIGNATURE_TYPE_MBR'; [Byte] 2 = 'SIGNATURE_TYPE_GUID' }[$FilePathListBytes[$SignatureIndex + 16 + 1]]
-
-                                            $DeviceInfo = [PSCustomObject] @{
-                                                PartitionNumber = $PartitionNumber
-                                                PartitionStart = $PartitionStart
-                                                PartitionSize = $PartitionSize
-                                                Signature = ($SignatureBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
-                                                MBRType = $MBRType
-                                                SignatureType = $SignatureType
-                                            }
-
-                                            [PSCustomObject] @{
-                                                Type = $DevicePathType
-                                                SubType = $DeviceSubType
-                                                DeviceInfo = $DeviceInfo
-                                            }
-                                        }
-
-
-                                        'MEDIA_FILEPATH_DP' {
-                                            $PathName = [Text.Encoding]::Unicode.GetString($DataBytes).TrimEnd(@(0))
-                                            $DeviceInfo = [PSCustomObject] @{ PathName = $PathName }
-
-                                            [PSCustomObject] @{
-                                                Type = $DevicePathType
-                                                SubType = $DeviceSubType
-                                                DeviceInfo = $DeviceInfo
-                                            }
-                                        }
-
-                                        'MEDIA_PIWG_FW_VOL_DP' {
-                                            $DeviceInfo = [PSCustomObject] @{ FvName = [Guid] $DataBytes }
-
-                                            [PSCustomObject] @{
-                                                Type = $DevicePathType
-                                                SubType = $DeviceSubType
-                                                DeviceInfo = $DeviceInfo
-                                            }
-                                        }
-
-                                        'MEDIA_PIWG_FW_FILE_DP' {
-                                            $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
-
-                                            [PSCustomObject] @{
-                                                Type = $DevicePathType
-                                                SubType = $DeviceSubType
-                                                DeviceInfo = $DeviceInfo
-                                            }
-                                        }
-
-                                        default {
-                                            $DeviceSubType = $FilePathListBytes[$FilePathEntryIndex + 1].ToString('X2')
-                                            $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
-
-                                            [PSCustomObject] @{
-                                                Type = $DevicePathType
-                                                SubType = $DeviceSubType
-                                                DeviceInfo = $DeviceInfo
-                                            }
-                                        }
-                                    }
-                                }
-
-                                'END_DEVICE_PATH_TYPE' { }
-
-                                default {
-                                    # Until other subtypes are added, just supply the bytes.
-                                    $DeviceSubType = $FilePathListBytes[$FilePathEntryIndex + 1].ToString('X2')
-
-                                    [PSCustomObject] @{
-                                        Type = $DevicePathType
-                                        SubType = $DeviceSubType
-                                        Length = $Length
-                                        Data = ($DataBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
-                                    }
-                                }
-                            }
-
-                            $FilePathEntryIndex = $FilePathEntryIndex + $Length
-                            $MoreToParse = $null -ne $FilePathListBytes[$FilePathEntryIndex]
-                        }
-                    }
+                    $FilePathList = Get-EfiDevicePathProtocol -DevicePathBytes $FilePathListBytes
 
                     $OptionalData = $null
 
