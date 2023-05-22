@@ -1475,12 +1475,11 @@ Outputs a parsed TCG log.
                 $ImageLinkTimeAddress = [BitConverter]::ToUInt64($EventBytes, 16)
                 $LengthOfDevicePath = [BitConverter]::ToUInt64($EventBytes, 24)
 
-                $DevicePathBytes = $EventBytes[32..(32 + $LengthOfDevicePath - 1)]
-
                 $FilePathList = $null
 
                 # Parse all the file list entries
-                if ($DevicePathBytes.Count) {
+                if ($LengthOfDevicePath -gt 0) {
+                    $DevicePathBytes = $EventBytes[32..(32 + $LengthOfDevicePath - 1)]
                     $MoreToParse = $True
                     $FilePathEntryIndex = 0
 
