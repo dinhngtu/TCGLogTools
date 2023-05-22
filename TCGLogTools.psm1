@@ -366,7 +366,7 @@ function Get-SIPAEventData {
     $EventMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$SIPAEventBytes)
     $EventBinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $EventMemoryStream, ([Text.Encoding]::Unicode)
 
-    while (($EventBinaryReader.BaseStream.Position) -lt $SIPAEventBytes.Count) {
+    $evs = while (($EventBinaryReader.BaseStream.Position) -lt $SIPAEventBytes.Count) {
         $SIPAEventTypeVal = $EventBinaryReader.ReadInt32()
         $SIPAEventType = $SIPAEventMapping[$SIPAEventTypeVal]
 
@@ -376,241 +376,29 @@ function Get-SIPAEventData {
         # All SIPA event types _should_ be defined but just in case one isn't, print it out in hex.
         if (-not $SIPAEventType) { $SIPAEventType = "0x$($SIPAEventTypeVal.ToString('X8'))" }
 
-        if ((($SIPAEventTypeVal -band 0x000F0000) -eq $ContainerType) -or (($SIPAEventType -eq 'NoAuthority') -or ($SIPAEventType -eq 'AuthorityPubKey'))) {
+        if ($SIPAEventType -eq 'NoAuthority' -or $SIPAEventType -eq 'AuthorityPubKey') {
             switch ($SIPAEventType) {
-                'TrustBoundary' {
-                    $PropertyTemplate = [Ordered] @{
-                        Information = $null
-                        PreOSParameters = $null
-                        OSParameters = $null
-                        LoadedModules = $null # This appears to be the only one that will have multiple entries
-                        ELAM = $null
-                        VBS = $null
-                    }
-
-                    $InformationTemplate = @{
-                        Information = $null
-                        BootCounter = $null
-                        TransferControl = $null
-                        ApplicationReturn = $null
-                        BitlockerUnlock = $null
-                        EventCounter = $null
-                        CounterID = $null
-                        MORBitNotCancelable = $null
-                        ApplicationSVN = $null
-                        SVNChainStatus = $null
-                        MORBitAPIStatus = $null
-                    }
-
-                    $PreOSTemplate = @{
-                        BootDebugging = $null
-                        BootRevocationList = $null
-                    }
-
-                    $OSTemplate = @{
-                        OSKernelDebug = $null
-                        CodeIntegrity = $null
-                        TestSigning = $null
-                        DataExecutionPrevention = $null
-                        SafeMode = $null
-                        WinPE = $null
-                        PhysicalAddressExtension = $null
-                        OSDevice = $null
-                        SystemRoot = $null
-                        HypervisorLaunchType = $null
-                        HypervisorPath = $null
-                        HypervisorIOMMUPolicy = $null
-                        HypervisorDebug = $null
-                        DriverLoadPolicy = $null
-                        SIPolicy = $null
-                        HypervisorMMIONXPolicy = $null
-                        HypervisorMSRFilterPolicy = $null
-                        VSMLaunchType = $null
-                        OSRevocationList = $null
-                        SMTStatus = $null
-                        VSMIDKInfo = $null
-                        FlightSigning = $null
-                        PagefileEncryptionEnabled = $null
-                        VSMIDKSInfo = $null
-                        HibernationDisabled = $null
-                        DumpsDisabled = $null
-                        DumpEncryptionEnabled = $null
-                        DumpEncryptionKeyDigest = $null
-                        LSAISOConfig = $null
-                        SBCPInfo = $null
-                        HypervisorBootDMAProtection = $null
-                    }
-
-                    $VBSTemplate = @{
-                        VBSVSMRequired = $null
-                        VBSSecurebootRequired = $null
-                        VBSIOMMURequired = $null
-                        VBSNXRequired = $null
-                        VBSMSRFilteringRequired = $null
-                        VBSMandatoryEnforcement = $null
-                        VBSHVCIPolicy = $null
-                        VBSMicrosoftBootChainRequired = $null
-                        VBSDumpUsesAMERoot = $null
-                        VBSVSMNosecretsEnforced = $null
-                    }
-
-                    $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
-
-                    $LoadedModuleList = New-Object 'System.Collections.Generic.List[PSObject]'
-                    $ELAMList = New-Object 'System.Collections.Generic.List[PSObject]'
-
-                    $InformationTemplateSet = $False
-                    $PreOSTemplateSet = $False
-                    $OSTemplateSet = $False
-                    $VBSTemplateSet = $False
-
-                    foreach ($Container in $ContainerEvents) {
-                        if ($Container.SIPAEventType -eq 'LoadedModuleAggregation') {
-                            $LoadedModuleList.Add($Container.SIPAEventData)
-                        } elseif ($Container.SIPAEventType -eq 'ELAMAggregation') {
-                            $ELAMList.Add($Container.SIPAEventData)
-                        } else {
-                            switch ($Container.Category) {
-                                'Information' {
-                                    $InformationTemplateSet = $True
-                                    $InformationTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                                }
-
-                                'PreOSParameter' {
-                                    $PreOSTemplateSet = $True
-                                    $PreOSTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                                }
-
-                                'OSParameter' {
-                                    $OSTemplateSet = $True
-                                    $OSTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                                }
-
-                                'VBS' {
-                                    $VBSTemplateSet = $True
-                                    $VBSTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                                }
-                            }
-                        }
-                    }
-
-                    $InformationObject = $null
-                    $PreOSParameterObject = $null
-                    $OSParameterObject = $null
-                    $VBSObject = $null
-
-                    if ($InformationTemplateSet) { $InformationObject = [PSCustomObject] $InformationTemplate }
-                    if ($PreOSTemplateSet) { $PreOSParameterObject = [PSCustomObject] $PreOSTemplate }
-                    if ($OSTemplateSet) { $OSParameterObject = [PSCustomObject] $OSTemplate }
-                    if ($VBSTemplateSet) { $VBSObject = [PSCustomObject] $VBSTemplate }
-
-                    $PropertyTemplate['Information'] = $InformationObject
-                    $PropertyTemplate['PreOSParameters'] = $PreOSParameterObject
-                    $PropertyTemplate['OSParameters'] = $OSParameterObject
-                    $PropertyTemplate['VBS'] = $VBSObject
-                    if ($LoadedModuleList.Count) { $PropertyTemplate['LoadedModules'] = $LoadedModuleList }
-                    if ($ELAMList) { $PropertyTemplate['ELAM'] = $ELAMList }
-
-                    [PSCustomObject] $PropertyTemplate
-                }
-
-                'LoadedModuleAggregation' {
-                    $PropertyTemplate = [Ordered] @{
-                        FilePath = $null
-                        ImageBase = $null
-                        ImageSize = $null
-                        HashAlgorithmID = $null
-                        AuthenticodeHash = $null
-                        ImageValidated = $null
-                        AuthorityIssuer = $null
-                        AuthorityPublisher = $null
-                        AuthoritySerial = $null
-                        AuthoritySHA1Thumbprint = $null
-                        ModuleSVN = $null
-                    }
-
-                    $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
-
-                    foreach ($Container in $ContainerEvents) {
-                        $PropertyTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                    }
-
-                    $ContainerObject = [PSCustomObject] $PropertyTemplate
-
-                    [PSCustomObject] @{
-                        IsContainer = $False
-                        SIPAEventType = $SIPAEventType
-                        SIPAEventData = $ContainerObject
-                    }
-                }
-
-                'ELAMAggregation' {
-                    $PropertyTemplate = [Ordered] @{
-                        ELAMKeyname = $null
-                        ELAMConfiguration = $null
-                        ELAMPolicy = $null
-                        ELAMMeasured = $null
-                    }
-
-                    $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
-
-                    foreach ($Container in $ContainerEvents) {
-                        $PropertyTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                    }
-
-                    $ContainerObject = [PSCustomObject] $PropertyTemplate
-
-                    [PSCustomObject] @{
-                        IsContainer = $False
-                        SIPAEventType = $SIPAEventType
-                        SIPAEventData = $ContainerObject
-                    }
-                }
-
-                'TrustpointAggregation' {
-                    $PropertyTemplate = [Ordered] @{
-                        AIKID = $null
-                        AIKPubDigest = $null
-                        Quote = $null
-                        QuoteSignature = $null
-                    }
-
-                    $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
-
-                    foreach ($Container in $ContainerEvents) {
-                        $PropertyTemplate[$Container.SIPAEventType] = $Container.SIPAEventData
-                    }
-
-                    $ContainerObject = [PSCustomObject] $PropertyTemplate
-
-                    $ContainerObject
-                }
-
                 'NoAuthority' {
                     [PSCustomObject] @{
+                        Category = 'Authority'
+                        SIPAEventType = $SIPAEventType
                         NoAuthority = $EventBytes
                     }
                 }
 
                 'AuthorityPubKey' {
                     [PSCustomObject] @{
+                        Category = 'Authority'
+                        SIPAEventType = $SIPAEventType
                         AuthorityPubKey = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
                 }
-
-                default {
-                    # Return raw event data for KSR containers until I have data to actually parse
-                    # KSRAggregation
-                    # KSRSignedMeasurementAggregation
-
-                    Write-Warning "Uncategorized SIPA Event Category"
-
-                    [PSCustomObject] @{
-                        IsContainer = $True
-                        SIPAEventType = $SIPAEventType
-                        SIPAEventData = Get-SIPAEventData -SIPAEventBytes $EventBytes
-                    }
-                }
+            }
+        } elseif (($SIPAEventTypeVal -band 0x000F0000) -eq $ContainerType) {
+            [PSCustomObject] @{
+                Category = 'Container'
+                SIPAEventType = $SIPAEventType
+                SIPAEventData = Get-SIPAEventData -SIPAEventBytes $EventBytes
             }
         } else {
             # Each SIPA event data structure will differ depending on the type.
@@ -849,7 +637,7 @@ function Get-SIPAEventData {
             }
 
             [PSCustomObject] @{
-                Category = $Category
+                #Category = $Category
                 SIPAEventType = $SIPAEventType
                 SIPAEventData = $EventData
             }
@@ -857,6 +645,7 @@ function Get-SIPAEventData {
     }
 
     $EventBinaryReader.Close()
+    return $evs
 }
 
 function Get-TPMDeviceInfo {
