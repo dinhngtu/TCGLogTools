@@ -1399,7 +1399,7 @@ Outputs a parsed TCG log.
                     $SignatureOwner = [Guid][Byte[]] $SignatureDataBytes[0..15]
                     $SignatureBytes = $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]
 
-                    $SignatureData = New-Object -TypeName $SignatureObjectType -ArgumentList (@(,$SignatureBytes))
+                    $SignatureData = New-Object -TypeName $SignatureObjectType -ArgumentList (@(,[Byte[]]$SignatureBytes))
 
                     $VariableData = [PSCustomObject] @{
                         SignatureOwner = $SignatureOwner
