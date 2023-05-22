@@ -205,6 +205,9 @@ $Script:DigestAlgorithmMapping = @{
     [UInt16] 13 = 'TPM_ALG_SHA512'
     [UInt16] 16 = 'TPM_ALG_NULL'
     [UInt16] 18 = 'TPM_ALG_SM3_256'
+    [UInt16] 39 = 'TPM_ALG_SHA3_256'
+    [UInt16] 40 = 'TPM_ALG_SHA3_384'
+    [UInt16] 41 = 'TPM_ALG_SHA3_512'
 }
 
 $Script:HashAlgorithmMapping = @{
@@ -215,6 +218,19 @@ $Script:HashAlgorithmMapping = @{
     0x0000800C = 'CALG_SHA_256'
     0x0000800D = 'CALG_SHA_384'
     0x0000800E = 'CALG_SHA_512'
+}
+
+$Script:FvebUnlockFlagMapping = @{
+    0x00000000 = 'NONE'
+    0x00000001 = 'CACHED'
+    0x00000002 = 'MEDIA'
+    0x00000004 = 'TPM'
+    0x00000010 = 'PIN'
+    0x00000020 = 'EXTERNAL'
+    0x00000040 = 'RECOVERY'
+    0x00000080 = 'PASSPHRASE'
+    0x00000100 = 'NBP'
+    0x00000200 = 'AUK_OSFVEINFO'
 }
 
 $Script:OSDeviceMapping = @{
@@ -228,6 +244,9 @@ $Script:OSDeviceMapping = @{
     0x00010007 = 'BLOCKIO_VIRTUALHARDDISK'
     0x00020000 = 'SERIAL'
     0x00030000 = 'UDP'
+    0x00040000 = 'VMBUS'
+    0x00050000 = 'COMPOSITE'
+    0x00060000 = 'CIMFS'
 }
 
 $Script:EventTypeMapping = @{
@@ -409,7 +428,20 @@ function Get-SIPAEventData {
                 'BootCounter'         { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
                 'TransferControl'     { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
                 'ApplicationReturn'   { $EventData = $EventBytes; $Category = 'Information' }
-                'BitlockerUnlock'     { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
+                'BitlockerUnlock'     {
+                    $FvebUnlockFlag = [BitConverter]::ToUInt32($EventBytes, 0)
+                    $Category = 'Information'
+                    $FvebUnlockFlags = New-Object 'System.Collections.Generic.List[System.String]'
+                    foreach ($f in $Script:FvebUnlockFlagMapping.GetEnumerator()) {
+                        if ($FvebUnlockFlag -band $f.Key) {
+                            $FvebUnlockFlags.Add($f.Value)
+                            $FvebUnlockFlag = $FvebUnlockFlag -band (-bnot $f.key)
+                        }
+                    }
+                    $EventData = [PSCustomObject]@{
+                        Flags = $FvebUnlockFlags
+                    }
+                }
                 'EventCounter'        { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
                 'CounterID'           { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
                 'MORBitNotCancelable' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
