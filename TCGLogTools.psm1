@@ -457,6 +457,51 @@ $Script:PartitionGUIDMapping = @{
 }
 #endregion
 
+function ConvertTo-CertificateInfo {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [Byte[]]
+        $CertificateData,
+        [Parameter()]
+        [switch]
+        $Details
+    )
+
+    $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($CertificateData)
+    $result = @{
+        Subject = $cert.Subject
+        Issuer = $cert.Issuer
+        SerialNumber = $cert.SerialNumber
+        NotBefore = [System.TimeZoneInfo]::ConvertTimeToUtc($cert.NotBefore).ToString("o")
+        NotAfter = [System.TimeZoneInfo]::ConvertTimeToUtc($cert.NotAfter).ToString("o")
+        Thumbprint = $cert.Thumbprint
+    }
+    if ($Details) {
+        $result += @{
+            Version = $cert.Version
+            SignatureAlgorithm = $cert.SignatureAlgorithm
+            PublicKey = @{
+                #Oid = "$($cert.PublicKey.Oid.Value) ($($cert.PublicKey.Oid.FriendlyName))"
+                Oid = $cert.PublicKey.Oid
+                EncodedKeyValue = $cert.PublicKey.EncodedKeyValue.Format($false)
+                EncodedParameters = $cert.PublicKey.EncodedParameters.Format($false)
+            }
+            Extensions = $cert.Extensions | ForEach-Object {
+                @(
+                    $_.GetType().Name
+                    if ($_.Critical) {
+                        "Critical"
+                    }
+                    $_.Format($false)
+                ) -join "  "
+            }
+        }
+    }
+
+    return $result
+}
+
 # Helper function to retrieve SIPA events - i.e. Windows-specific PCR measurements
 # I still have no clue what SIPA refers to. I use it because it's referenced all over wbcl.h.
 # This function should not be exported.
@@ -574,7 +619,7 @@ function Get-SIPAEventData {
                 'BootRevocationList' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
 
-                    $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0))
+                    $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0)).ToString("o")
                     $DigestLength = [BitConverter]::ToUInt32($EventBytes, 8)
                     $HashAlgorithm = $DigestAlgorithmMapping[[BitConverter]::ToUInt16($EventBytes, 0x0C)]
                     $Digest = [BitConverter]::ToString($EventBytes[0x0E..(0x0E + $DigestLength - 1)]).Replace('-', '')
@@ -638,7 +683,7 @@ function Get-SIPAEventData {
                 'OSRevocationList' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
 
-                    $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0))
+                    $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0)).ToString("o")
                     $DigestLength = [BitConverter]::ToUInt32($EventBytes, 8)
                     $HashAlgorithm = $DigestAlgorithmMapping[[BitConverter]::ToUInt16($EventBytes, 0x0C)]
                     $Digest = [BitConverter]::ToString($EventBytes[0x0E..(0x0E + $DigestLength - 1)]).Replace('-', '')
@@ -1476,12 +1521,6 @@ Outputs a parsed TCG log.
         }
     }
 
-    if ($MinimizedX509CertInfo) {
-        $SignatureObjectType = 'Security.Cryptography.X509Certificates.X509Certificate'
-    } else {
-        $SignatureObjectType = 'Security.Cryptography.X509Certificates.X509Certificate2'
-    }
-
     try {
         $MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$TCGLogBytes)
         $BinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $MemoryStream, ([Text.Encoding]::Unicode)
@@ -1761,7 +1800,7 @@ Outputs a parsed TCG log.
                     $SignatureOwner = [Guid][Byte[]] $SignatureDataBytes[0..15]
                     $SignatureBytes = $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]
 
-                    $SignatureData = New-Object -TypeName $SignatureObjectType -ArgumentList (@(,[Byte[]]$SignatureBytes))
+                    $SignatureData = ConvertTo-CertificateInfo -CertificateData $SignatureBytes -Details:(!$MinimizedX509CertInfo)
 
                     $VariableData = [PSCustomObject] @{
                         SignatureOwner = $SignatureOwner
@@ -1833,7 +1872,7 @@ Outputs a parsed TCG log.
                                 }
 
                                 'EFI_CERT_X509_GUID' {
-                                    $SignatureData = New-Object $SignatureObjectType -ArgumentList @(,([Byte[]] $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]))
+                                    $SignatureData = ConvertTo-CertificateInfo -CertificateData ([Byte[]] $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]) -Details:(!$MinimizedX509CertInfo)
                                 }
                             }
 
