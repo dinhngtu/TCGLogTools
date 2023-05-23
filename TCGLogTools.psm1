@@ -1419,8 +1419,16 @@ Outputs a parsed TCG log.
         $LogPath,
 
         [Switch]
-        $MinimizedX509CertInfo
+        $MinimizedX509CertInfo,
+
+        [string]
+        $DbxInfoPath = "$PSScriptRoot/dbx_info.csv"
     )
+
+    $DbxInfo = $null
+    if (![string]::IsNullOrEmpty($DbxInfoPath)) {
+        $DbxInfo = Import-Csv -LiteralPath $DbxInfoPath
+    }
 
     $LogFullPath = $null
     # The header should be at least this long in order to proceed with parsing.
@@ -1788,7 +1796,17 @@ Outputs a parsed TCG log.
 
                             switch ($SignatureType) {
                                 'EFI_CERT_SHA256_GUID' {
-                                    $SignatureData = ([Byte[]] $SignatureDataBytes[0x10..0x2F] | ForEach-Object { $_.ToString('X2') }) -join ''
+                                    $Hash = ([Byte[]] $SignatureDataBytes[0x10..0x2F] | ForEach-Object { $_.ToString('X2') }) -join ''
+                                    $HashDbxInfo = $null
+                                    if ($UnicodeName -eq 'dbx' -and $null -ne $DbxInfo) {
+                                        $HashDbxInfo = $DbxInfo | Where-Object "PE256 Authenticode" -ieq $Hash
+                                    }
+                                    $SignatureData = @{
+                                        Hash = $Hash
+                                    }
+                                    if ($null -ne $HashDbxInfo) {
+                                        $SignatureData["dbx_info"] = $HashDbxInfo
+                                    }
                                 }
 
                                 'EFI_CERT_X509_GUID' {
