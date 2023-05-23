@@ -1448,7 +1448,10 @@ Outputs a parsed TCG log.
 
     $DbxInfo = $null
     if (![string]::IsNullOrEmpty($DbxInfoPath)) {
-        $DbxInfo = Import-Csv -LiteralPath $DbxInfoPath
+        $DbxInfo = @{}
+        Import-Csv -LiteralPath $DbxInfoPath | ForEach-Object {
+            $DbxInfo[$_."PE256 Authenticode"] = $_
+        }
     }
 
     $LogFullPath = $null
@@ -1820,7 +1823,7 @@ Outputs a parsed TCG log.
                                     $Hash = ([Byte[]] $SignatureDataBytes[0x10..0x2F] | ForEach-Object { $_.ToString('X2') }) -join ''
                                     $HashDbxInfo = $null
                                     if ($UnicodeName -eq 'dbx' -and $null -ne $DbxInfo) {
-                                        $HashDbxInfo = $DbxInfo | Where-Object "PE256 Authenticode" -ieq $Hash
+                                        $HashDbxInfo = $DbxInfo[$Hash]
                                     }
                                     $SignatureData = @{
                                         Hash = $Hash
