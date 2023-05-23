@@ -360,6 +360,56 @@ $Script:ACPIDeviceSubTypeMapping = @{
     [Byte] 3 = 'ACPI_ADR_DP'           # Corresponding struct: ACPI_ADR_DEVICE_PATH
 }
 
+# https://github.com/tianocore/edk2/blob/master/MdePkg/Include/Protocol/DevicePath.h
+$Script:HardwareDeviceSubTypeMapping = @{
+    [Byte] 1 = 'HW_PCI_DP'             # Corresponding struct: PCI_DEVICE_PATH
+    [Byte] 2 = 'HW_PCCARD_DP'          # Corresponding struct: PCCARD_DEVICE_PATH
+    [Byte] 3 = 'HW_MEMMAP_DP'          # Corresponding struct: MEMMAP_DEVICE_PATH
+    [Byte] 4 = 'HW_VENDOR_DP'          # Corresponding struct: VENDOR_DEVICE_PATH
+    [Byte] 5 = 'HW_CONTROLLER_DP'      # Corresponding struct: CONTROLLER_DEVICE_PATH
+    [Byte] 6 = 'HW_BMC_DP'             # Corresponding struct: BMC_DEVICE_PATH
+}
+
+$Script:MessagingDeviceSubTypeMapping = @{
+    [Byte] 0x01 = 'MSG_ATAPI_DP'                # Corresponding struct: ATAPI_DEVICE_PATH
+    [Byte] 0x02 = 'MSG_SCSI_DP'                 # Corresponding struct: SCSI_DEVICE_PATH
+    [Byte] 0x03 = 'MSG_FIBRECHANNEL_DP'         # Corresponding struct: FIBRECHANNEL_DEVICE_PATH
+    [Byte] 0x15 = 'MSG_FIBRECHANNELEX_DP'       # Corresponding struct: FIBRECHANNELEX_DEVICE_PATH
+    [Byte] 0x04 = 'MSG_1394_DP'                 # Corresponding struct: F1394_DEVICE_PATH
+    [Byte] 0x05 = 'MSG_USB_DP'                  # Corresponding struct: USB_DEVICE_PATH
+    [Byte] 0x0f = 'MSG_USB_CLASS_DP'            # Corresponding struct: USB_CLASS_DEVICE_PATH
+    [Byte] 0x10 = 'MSG_USB_WWID_DP'             # Corresponding struct: USB_WWID_DEVICE_PATH
+    [Byte] 0x11 = 'MSG_DEVICE_LOGICAL_UNIT_DP'  # Corresponding struct: DEVICE_LOGICAL_UNIT_DEVICE_PATH
+    [Byte] 0x12 = 'MSG_SATA_DP'                 # Corresponding struct: SATA_DEVICE_PATH
+    [Byte] 0x06 = 'MSG_I2O_DP'                  # Corresponding struct: I2O_DEVICE_PATH
+    [Byte] 0x0b = 'MSG_MAC_ADDR_DP'             # Corresponding struct: MAC_ADDR_DEVICE_PATH
+    [Byte] 0x0c = 'MSG_IPv4_DP'                 # Corresponding struct: IPv4_DEVICE_PATH
+    [Byte] 0x0d = 'MSG_IPv6_DP'                 # Corresponding struct: IPv6_DEVICE_PATH
+    [Byte] 0x09 = 'MSG_INFINIBAND_DP'           # Corresponding struct: INFINIBAND_DEVICE_PATH
+    [Byte] 0x0e = 'MSG_UART_DP'                 # Corresponding struct: UART_DEVICE_PATH
+    [Byte] 0x20 = 'NVDIMM_NAMESPACE_DP'         # Corresponding struct: NVDIMM_NAMESPACE_DEVICE_PATH
+    [Byte] 0x0a = 'MSG_VENDOR_DP'               # Corresponding struct: VENDOR_DEFINED_DEVICE_PATH (VENDOR_DEVICE_PATH)
+    [Byte] 0x16 = 'MSG_SASEX_DP'                # Corresponding struct: SASEX_DEVICE_PATH
+    [Byte] 0x17 = 'MSG_NVME_NAMESPACE_DP'       # Corresponding struct: NVME_NAMESPACE_DEVICE_PATH
+    [Byte] 0x1f = 'MSG_DNS_DP'                  # Corresponding struct: DNS_DEVICE_PATH
+    [Byte] 0x18 = 'MSG_URI_DP'                  # Corresponding struct: URI_DEVICE_PATH
+    [Byte] 0x19 = 'MSG_UFS_DP'                  # Corresponding struct: UFS_DEVICE_PATH
+    [Byte] 0x1a = 'MSG_SD_DP'                   # Corresponding struct: SD_DEVICE_PATH
+    [Byte] 0x1d = 'MSG_EMMC_DP'                 # Corresponding struct: EMMC_DEVICE_PATH
+    [Byte] 0x13 = 'MSG_ISCSI_DP'                # Corresponding struct: ISCSI_DEVICE_PATH
+    [Byte] 0x14 = 'MSG_VLAN_DP'                 # Corresponding struct: VLAN_DEVICE_PATH
+    [Byte] 0x1b = 'MSG_BLUETOOTH_DP'            # Corresponding struct: BLUETOOTH_DEVICE_PATH
+    [Byte] 0x1c = 'MSG_WIFI_DP'                 # Corresponding struct: WIFI_DEVICE_PATH
+    [Byte] 0x1e = 'MSG_BLUETOOTH_LE_DP'         # Corresponding struct: BLUETOOTH_LE_DEVICE_PATH
+}
+
+$Script:MessagingVendorMapping = @{
+    'E0C14753-F9BE-11D2-9A0C-0090273FC14D' = 'EFI_PC_ANSI_GUID'
+    'DFA66065-B419-11D3-9A2D-0090273FC14D' = 'EFI_VT_100_GUID'
+    '7BAEC70B-57E0-4C76-8E87-2F9E28088343' = 'EFI_VT_100_PLUS_GUID'
+    'AD15A0D6-8BEC-4ACF-A073-D01DE77E2D88' = 'EFI_VT_UTF8_GUID'
+}
+
 $Script:PartitionGUIDMapping = @{
     'EBD0A0A2-B9E5-4433-87C0-68B6B72699C7' = 'PARTITION_BASIC_DATA_GUID'
     '57434F53-4DF9-45B9-8E9E-2370F006457C' = 'PARTITION_BSP_GUID'
@@ -726,6 +776,118 @@ function Get-EfiDevicePathProtocol {
         [Byte[]] $DataBytes = $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + $Length - 1)]
 
         switch ($DevicePathType) {
+            'HARDWARE_DEVICE_PATH' {
+                $DeviceSubType = $HardwareDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+
+                switch ($DeviceSubType) {
+                    'HW_PCI_DP' {
+                        $Function = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+                        $Device = $DevicePathBytes[$FilePathEntryIndex + 4 + 1]
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            Function = $Function
+                            Device = $Device
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'HW_PCCARD_DP' {
+                        $FunctionNumber = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            FunctionNumber = $FunctionNumber
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'HW_MEMMAP_DP' {
+                        $MemoryType = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $StartingAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+                        $EndingAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 12)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            MemoryType = $MemoryType
+                            StartingAddress = $StartingAddress
+                            EndingAddress = $EndingAddress
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'HW_VENDOR_DP' {
+                        $Guid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + 4 + 15)]
+                        $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 15)..($FilePathEntryIndex + $Length - 1)]
+                        $Data = [BitConverter]::ToString($Data).Replace('-', '')
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            Guid = $Guid
+                            Data = $Data
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'HW_CONTROLLER_DP' {
+                        $ControllerNumber = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            ControllerNumber = $ControllerNumber
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'HW_BMC_DP' {
+                        $InterfaceType = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+                        $BaseAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 1)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            InterfaceType = $InterfaceType
+                            BaseAddress = $BaseAddress
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    default {
+                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+                        $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+                }
+            }
+
             'ACPI_DEVICE_PATH' {
                 $DeviceSubType = $ACPIDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
 
@@ -776,6 +938,17 @@ function Get-EfiDevicePathProtocol {
                             ADR = $ADR # For video output devices the value of this
                                         # field comes from Table B-2 of the ACPI 3.0 specification.
                         }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    default {
+                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+                        $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
                             Type = $DevicePathType
@@ -840,6 +1013,127 @@ function Get-EfiDevicePathProtocol {
 
                     'MEDIA_PIWG_FW_FILE_DP' {
                         $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    default {
+                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+                        $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+                }
+            }
+
+            'MESSAGING_DEVICE_PATH' {
+                $DeviceSubType = $MessagingDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+
+                # too much effort to parse them all...
+                switch ($DeviceSubType) {
+                    'MSG_ATAPI_DP' {
+                        $PrimarySecondary = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+                        $SlaveMaster = $DevicePathBytes[$FilePathEntryIndex + 4 + 1]
+                        $Lun = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 2)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            PrimarySecondary = $PrimarySecondary
+                            SlaveMaster = $SlaveMaster
+                            Lun = $Lun
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_SCSI_DP' {
+                        $Pun = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $Lun = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 2)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            Pun = $Pun
+                            Lun = $Lun
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_USB_DP' {
+                        $ParentPortNumber = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+                        $InterfaceNumber = $DevicePathBytes[$FilePathEntryIndex + 4 + 1]
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            ParentPortNumber = $ParentPortNumber
+                            InterfaceNumber = $InterfaceNumber
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_SATA_DP' {
+                        $HBAPortNumber = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $PortMultiplierPortNumber = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 2)
+                        $Lun = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            HBAPortNumber = $HBAPortNumber
+                            PortMultiplierPortNumber = $PortMultiplierPortNumber
+                            Lun = $Lun
+                            HBADirectConnect = !!($HBAPortNumber -band 0x8000)  # SATA_HBA_DIRECT_CONNECT_FLAG
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_VENDOR_DP' {
+                        $Guid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + 4 + 15)]
+                        $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 15)..($FilePathEntryIndex + $Length - 1)]
+                        $Data = [BitConverter]::ToString($Data).Replace('-', '')
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            Guid = $Guid
+                            Vendor = $PartitionGUIDMapping[$Guid]
+                            Data = $Data
+                        }
+
+                        [PSCustomObject] @{
+                            Type = $DevicePathType
+                            SubType = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_NVME_NAMESPACE_DP' {
+                        $NamespaceId = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $NamespaceUuid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4 + 4)..($FilePathEntryIndex + 4 + 19)]
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            NamespaceId = $NamespaceId
+                            NamespaceUuid = $NamespaceUuid
+                        }
 
                         [PSCustomObject] @{
                             Type = $DevicePathType
