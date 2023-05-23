@@ -1762,7 +1762,6 @@ Outputs a parsed TCG log.
                     $SignatureBytes = $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]
 
                     $SignatureData = New-Object -TypeName $SignatureObjectType -ArgumentList (@(,[Byte[]]$SignatureBytes))
-                    $SignatureData | Add-Member -MemberType NoteProperty -Name CertSerialNumber -Value $SignatureData.GetSerialNumberString()
 
                     $VariableData = [PSCustomObject] @{
                         SignatureOwner = $SignatureOwner
@@ -1835,7 +1834,6 @@ Outputs a parsed TCG log.
 
                                 'EFI_CERT_X509_GUID' {
                                     $SignatureData = New-Object $SignatureObjectType -ArgumentList @(,([Byte[]] $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]))
-                                    $SignatureData | Add-Member -MemberType NoteProperty -Name CertSerialNumber -Value $SignatureData.GetSerialNumberString()
                                 }
                             }
 
