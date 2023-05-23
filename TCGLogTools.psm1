@@ -503,10 +503,28 @@ function Get-SIPAEventData {
                 }
             }
         } elseif (($SIPAEventTypeVal -band 0x000F0000) -eq $ContainerType) {
-            [PSCustomObject] @{
-                #Category = 'Container'
-                SIPAEventType = $SIPAEventType
-                SIPAEventData = Get-SIPAEventData -SIPAEventBytes $EventBytes
+            switch ($SIPAEventType) {
+                'LoadedModuleAggregation' {
+                    $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
+                    $LoadedModule = @{}
+                    foreach ($ev in $ContainerEvents) {
+                        $LoadedModule[$ev.SIPAEventType] = $ev.SIPAEventData
+                    }
+
+                    [PSCustomObject] @{
+                        #Category = 'Authority'
+                        SIPAEventType = $SIPAEventType
+                        LoadedModule = $LoadedModule
+                    }
+                }
+
+                default {
+                    [PSCustomObject] @{
+                        #Category = 'Container'
+                        SIPAEventType = $SIPAEventType
+                        SIPAEventData = Get-SIPAEventData -SIPAEventBytes $EventBytes
+                    }
+                }
             }
         } else {
             # Each SIPA event data structure will differ depending on the type.
