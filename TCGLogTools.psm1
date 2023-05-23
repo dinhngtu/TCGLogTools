@@ -482,7 +482,6 @@ function ConvertTo-CertificateInfo {
             Version = $cert.Version
             SignatureAlgorithm = $cert.SignatureAlgorithm
             PublicKey = @{
-                #Oid = "$($cert.PublicKey.Oid.Value) ($($cert.PublicKey.Oid.FriendlyName))"
                 Oid = $cert.PublicKey.Oid
                 EncodedKeyValue = $cert.PublicKey.EncodedKeyValue.Format($false)
                 EncodedParameters = $cert.PublicKey.EncodedParameters.Format($false)
@@ -540,10 +539,22 @@ function Get-SIPAEventData {
                 }
 
                 'AuthorityPubKey' {
+                    $AuthorityPubKey = $null
+                    if ([Environment]::Version.Major -ge 6) {
+                        $bytes = 0
+                        $pk = [System.Security.Cryptography.X509Certificates.PublicKey]::CreateFromSubjectPublicKeyInfo($EventBytes, [ref] $bytes)
+                        $AuthorityPubKey = @{
+                            Oid = $pk.Oid
+                            EncodedKeyValue = $pk.EncodedKeyValue.Format($false)
+                            EncodedParameters = $pk.EncodedParameters.Format($false)
+                        }
+                    } else {
+                        $AuthorityPubKey = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
+                    }
                     [PSCustomObject] @{
                         #Category = 'Authority'
                         SIPAEventType = $SIPAEventType
-                        AuthorityPubKey = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        AuthorityPubKey = $AuthorityPubKey
                     }
                 }
             }
