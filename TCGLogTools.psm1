@@ -1085,12 +1085,24 @@ function Get-EfiDevicePathProtocol {
                         [Byte[]] $SignatureBytes = $DevicePathBytes[$SignatureIndex..($SignatureIndex + 16 - 1)]
                         $MBRType = @{ [Byte] 1 = 'MBR_TYPE_PCAT'; [Byte] 2 = 'MBR_TYPE_EFI_PARTITION_TABLE_HEADER' }[$DevicePathBytes[$SignatureIndex + 16]]
                         $SignatureType = @{ [Byte] 0 = 'NO_DISK_SIGNATURE'; [Byte] 1 = 'SIGNATURE_TYPE_MBR'; [Byte] 2 = 'SIGNATURE_TYPE_GUID' }[$DevicePathBytes[$SignatureIndex + 16 + 1]]
+                        $Signature = $null
+                        switch ($SignatureType) {
+                            'SIGNATURE_TYPE_MBR' {
+                                $Signature = [BitConverter]::ToUInt32($SignatureBytes, 0).ToString('X8')
+                            }
+                            'SIGNATURE_TYPE_GUID' {
+                                $Signature = [guid]$SignatureBytes
+                            }
+                            default {
+                                $Signature = ($SignatureBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                            }
+                        }
 
                         $DeviceInfo = [PSCustomObject] @{
                             PartitionNumber = $PartitionNumber
                             PartitionStart = $PartitionStart
                             PartitionSize = $PartitionSize
-                            Signature = ($SignatureBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                            Signature = $Signature
                             MBRType = $MBRType
                             SignatureType = $SignatureType
                         }
