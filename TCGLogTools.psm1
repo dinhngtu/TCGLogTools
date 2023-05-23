@@ -127,7 +127,7 @@ $Script:SIPAEventMapping = @{
     0x00050011 = 'HypervisorMSRFilterPolicy' # SIPAEVENT_HYPERVISOR_MSR_FILTER_POLICY
     0x00050012 = 'VSMLaunchType'             # SIPAEVENT_VSM_LAUNCH_TYPE
     0x00050013 = 'OSRevocationList'          # SIPAEVENT_OS_REVOCATION_LIST
-    0x00050014 = 'SMTStatus'
+    0x00050014 = 'SMTStatus'                 # SIPAEVENT_SMT_STATUS
     0x00050020 = 'VSMIDKInfo'                # SIPAEVENT_VSM_IDK_INFO
     0x00050021 = 'FlightSigning'             # SIPAEVENT_FLIGHTSIGNING
     0x00050022 = 'PagefileEncryptionEnabled' # SIPAEVENT_PAGEFILE_ENCRYPTION_ENABLED
@@ -189,6 +189,22 @@ $Script:SIPAEventMapping = @{
     0x000C0002 = 'DRTMSMMLevel'
     0x000C0003 = 'DRTMAMDSMMHash'
     0x000C0004 = 'DRTMAMDSMMSignerKey'
+}
+
+$Script:SMTStatusTextMapping = @{
+    [UInt32] 0 = "Disabled"
+    [UInt32] 1 = "Enabled"
+    [UInt32] 2 = "SoftwareDisabled"
+}
+
+$Script:TransferControlMapping = @{
+    [UInt32] 0x00000000l = "NONE"
+    [UInt32] 0x00000001l = "OSLOADER"
+    [UInt32] 0x00000002l = "RESUME"
+    [UInt32] 0x00000003l = "MSUTILITY"
+    [UInt32] 0x00000004l = "NOSIGCHECK"
+    [UInt32] 0x00000005l = "HYPERVISOR"
+    [UInt32] 0xFFFFFFFFl = "Unknown"
 }
 
 $Script:DigestAlgorithmMapping = @{
@@ -499,7 +515,17 @@ function Get-SIPAEventData {
             switch ($SIPAEventType) {
                 'Information'         { $EventData = $EventBytes; $Category = 'Information' }
                 'BootCounter'         { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
-                'TransferControl'     { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
+                'TransferControl' {
+                    $TransferControl = [BitConverter]::ToUInt32($EventBytes, 0)
+                    $TransferControlText = $TransferControlMapping[$TransferControl]
+
+                    $Category = 'Information'
+
+                    $EventData = [PSCustomObject] @{
+                        TransferControl = $TransferControl
+                        TransferControlText = $TransferControlText
+                    }
+                }
                 'ApplicationReturn'   { $EventData = $EventBytes; $Category = 'Information' }
                 'BitlockerUnlock'     {
                     $FvebUnlockFlag = [BitConverter]::ToUInt32($EventBytes, 0)
@@ -602,6 +628,18 @@ function Get-SIPAEventData {
                         CreationTime = $CreationTime
                         HashAlgorithm = $HashAlgorithm
                         Digest = $Digest
+                    }
+                }
+
+                'SMTStatus' {
+                    $SMTStatus = [BitConverter]::ToUInt32($EventBytes, 0)
+                    $SMTStatusText = $SMTStatusTextMapping[$SMTStatus]
+
+                    $Category = 'OSParameter'
+
+                    $EventData = [PSCustomObject] @{
+                        SMTStatus = $SMTStatus
+                        SMTStatusText = $SMTStatusText
                     }
                 }
 
@@ -1692,6 +1730,7 @@ Outputs a parsed TCG log.
                     $SignatureBytes = $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]
 
                     $SignatureData = New-Object -TypeName $SignatureObjectType -ArgumentList (@(,[Byte[]]$SignatureBytes))
+                    $SignatureData | Add-Member -MemberType NoteProperty -Name CertSerialNumber -Value $SignatureData.GetSerialNumberString()
 
                     $VariableData = [PSCustomObject] @{
                         SignatureOwner = $SignatureOwner
@@ -1754,6 +1793,7 @@ Outputs a parsed TCG log.
 
                                 'EFI_CERT_X509_GUID' {
                                     $SignatureData = New-Object $SignatureObjectType -ArgumentList @(,([Byte[]] $SignatureDataBytes[16..($SignatureDataBytes.Count - 1)]))
+                                    $SignatureData | Add-Member -MemberType NoteProperty -Name CertSerialNumber -Value $SignatureData.GetSerialNumberString()
                                 }
                             }
 
