@@ -711,13 +711,13 @@ function Get-SIPAEventData {
                 'SMTStatus' {
                     $SMTStatus = [BitConverter]::ToUInt32($EventBytes, 0)
                     $SMTStatusText = $SMTStatusTextMapping[$SMTStatus]
+                    if (!$SMTStatusText) {
+                        $SMTStatusText = $SMTStatus.ToString('X8')
+                    }
 
                     $Category = 'OSParameter'
 
-                    $EventData = [PSCustomObject] @{
-                        SMTStatus = $SMTStatus
-                        SMTStatusText = $SMTStatusText
-                    }
+                    $EventData = $SMTStatusText
                 }
 
                 'VSMIDKInfo' {
@@ -944,7 +944,7 @@ function Get-EfiDevicePathProtocol {
                     'HW_VENDOR_DP' {
                         $Guid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + 4 + 15)]
                         $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 15)..($FilePathEntryIndex + $Length - 1)]
-                        $Data = [BitConverter]::ToString($Data).Replace('-', '')
+                        $Data = [BitConverter]::ToString($Data).Replace('-', ':')
 
                         $DeviceInfo = [PSCustomObject] @{
                             Guid = $Guid
