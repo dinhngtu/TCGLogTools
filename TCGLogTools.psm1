@@ -527,8 +527,7 @@ function Get-SIPAEventData {
                 'BootRevocationList' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
 
-                    # I haven't spent time to determine how to translate the creation time yet.
-                    $CreationTime = [BitConverter]::ToUInt64($EventBytes, 0)
+                    $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0))
                     $DigestLength = [BitConverter]::ToUInt32($EventBytes, 8)
                     $HashAlgorithm = $DigestAlgorithmMapping[[BitConverter]::ToUInt16($EventBytes, 0x0C)]
                     $Digest = [BitConverter]::ToString($EventBytes[0x0E..(0x0E + $DigestLength - 1)]).Replace('-', '')
@@ -592,7 +591,6 @@ function Get-SIPAEventData {
                 'OSRevocationList' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
 
-                    # I haven't spent time to determine how to translate the creation time yet.
                     $CreationTime = [datetime]::FromFileTimeUtc([BitConverter]::ToUInt64($EventBytes, 0))
                     $DigestLength = [BitConverter]::ToUInt32($EventBytes, 8)
                     $HashAlgorithm = $DigestAlgorithmMapping[[BitConverter]::ToUInt16($EventBytes, 0x0C)]
