@@ -536,13 +536,13 @@ function Get-SIPAEventData {
                 'TransferControl' {
                     $TransferControl = [BitConverter]::ToUInt32($EventBytes, 0)
                     $TransferControlText = $TransferControlMapping[$TransferControl]
+                    if (!$TransferControlText) {
+                        $TransferControlText = $TransferControl.ToString('X8')
+                    }
 
                     $Category = 'Information'
 
-                    $EventData = [PSCustomObject] @{
-                        TransferControl = $TransferControl
-                        TransferControlText = $TransferControlText
-                    }
+                    $EventData = $TransferControlText
                 }
                 'ApplicationReturn'   { $EventData = $EventBytes; $Category = 'Information' }
                 'BitlockerUnlock'     {
@@ -554,6 +554,9 @@ function Get-SIPAEventData {
                             $FvebUnlockFlags.Add($f.Value)
                             $FvebUnlockFlag = $FvebUnlockFlag -band (-bnot $f.key)
                         }
+                    }
+                    if ($FvebUnlockFlag -ne 0) {
+                        $FvebUnlockFlags.Add($FvebUnlockFlag.ToString('X8'))
                     }
                     $EventData = [PSCustomObject]@{
                         Flags = $FvebUnlockFlags
