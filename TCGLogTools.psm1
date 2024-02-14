@@ -805,7 +805,7 @@ function Get-SIPAEventData {
                 'VBSNXRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
                 'VBSMSRFilteringRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
                 'VBSMandatoryEnforcement' { $EventData = $EventBytes; $Category = 'VBS' }
-                'VBSHVCIPolicy' { $EventData = $EventBytes; $Category = 'VBS' }
+                'VBSHVCIPolicy' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'VBS' }
                 'VBSMicrosoftBootChainRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
                 'ELAMKeyname' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'ELAM' }
                 'ELAMMeasured' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
@@ -834,12 +834,12 @@ function Get-SIPAEventData {
                     switch ($PayloadVersion) {
                         1 {
                             # SIPAEVENT_SBCP_INFO_PAYLOAD_V1
+                            $VarDataOffset = [BitConverter]::ToUInt32($EventBytes, 4)
                             $HashAlgID = [BitConverter]::ToUInt16($EventBytes, 8)
                             $DigestLength = [BitConverter]::ToUInt16($EventBytes, 10)
-                            [Byte[]] $DigestBytes = $EventBytes[20..(20 + $DigestLength - 1)]
+                            [Byte[]] $DigestBytes = $EventBytes[$VarDataOffset..($VarDataOffset + $DigestLength - 1)]
 
                             $EventData = [PSCustomObject] @{
-                                VarDataOffset = [BitConverter]::ToUInt32($EventBytes, 4)
                                 HashAlg       = $DigestAlgorithmMapping[$HashAlgID]
                                 Options       = [BitConverter]::ToUInt32($EventBytes, 12)
                                 SignersCount  = [BitConverter]::ToUInt32($EventBytes, 16)
