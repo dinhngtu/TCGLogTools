@@ -266,26 +266,26 @@ $Script:OSDeviceMapping = @{
 }
 
 $Script:EventTypeMapping = @{
-    [UInt32] 0  = 'EV_PREBOOT_CERT'          # The event field contains certificates such as the Validation Certificates.
-    [UInt32] 1  = 'EV_POST_CODE'             # The digest field contains the SHA-1 hash of the POST portion of the BIOS. The event field SHOULD NOT contain the actual POST code but MAY contain informative information about the POST code.
-    [UInt32] 2  = 'EV_UNUSED'                # The event type was never used and is considered reserved.
-    [UInt32] 3  = 'EV_NO_ACTION'             # The event field contains informative data that was not extended into any PCR. The fields: pcrIndex and digest MUST contain the value 0.
-    [UInt32] 4  = 'EV_SEPARATOR'             # Delimits actions taken during the Pre-Operating System State and the Operating System Present State
-                                                # This will often be "WBCL" - Windows Boot Configuration Log (Microsoft's name for the TCG log)
-    [UInt32] 5  = 'EV_ACTION'                # A specific action measured as a string defined in Section 10.4.3.
-    [UInt32] 6  = 'EV_EVENT_TAG'             # The event field contains the structure defined in Section 10.4.2.1.
-    [UInt32] 7  = 'EV_S_CRTM_CONTENTS'       # The digest field contains is the SHA-1 hash of the SCRTM. The event field SHOULD NOT contain the actual S-CRTM code but MAY contain informative information about the S-CRTM code.
-    [UInt32] 8  = 'EV_S_CRTM_VERSION'        # The event field contains the version string of the SCRTM.
-    [UInt32] 9  = 'EV_CPU_MICROCODE'         # The event field contains a descriptor of the microcode but the digest field contains the actual hash of the microcode patch that was applied.
-    [UInt32] 10 = 'EV_PLATFORM_CONFIG_FLAGS' # The format and contents to be defined by the platform manufacturer. Examples of information contained in this event type are the capabilities of the platform?s measurements, whether the Owner has disabled measurements, etc.
-    [UInt32] 11 = 'EV_TABLE_OF_DEVICES'      # The event field contains the Platform manufacturerprovided Table of Devices or other Platform manufacturer-defined information. The Platform manufacturer defines the content and format of the Table of Devices. The Host Platform Certificate may provide a reference to the meaning of these structures and data. This structure is measured into PCR[1] using the following.
-    [UInt32] 12 = 'EV_COMPACT_HASH'          # This event is entered using the TCG_CompactHashLogExtendEvent. While it can be used by any function, it is typically used by IPL Code to measure events. The contents of the event field is specified by the caller but is not part of the measurement; rather, it is just informative.
-    [UInt32] 13 = 'EV_IPL'                   # The digest field contains the SHA-1 hash of the IPL Code. The event field SHOULD NOT contain the actual IPL Code but MAY contain informative information about the IPL Code. Note: The digest may not cover the entire area hosting the IPL Image, but only the portion that contains the IPL Code. For example, if the IPL Image is a disk drive MBR, this MUST NOT include the portion of the MBR that contains the disk geometry.
-    [UInt32] 14 = 'EV_IPL_PARTITION_DATA'    # The data and partition portion of the IPL Image.
-    [UInt32] 15 = 'EV_NONHOST_CODE'          # The executable component of any Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
-    [UInt32] 16 = 'EV_NONHOST_CONFIG'        # The parameters associated with a Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
-    [UInt32] 17 = 'EV_NONHOST_INFO'          # The event is information about the presence of a Non-host Platform. This information could be, but is not required to be, information such as the Non-host Platform manufacturer, model, type, version, etc. The information and formatting is to be determined by the BIOS.
-    [UInt32] 0x00000012 = 'EV_OMIT_BOOT_DEVICE_EVENTS'
+    [UInt32] 0                = 'EV_PREBOOT_CERT'          # The event field contains certificates such as the Validation Certificates.
+    [UInt32] 1                = 'EV_POST_CODE'             # The digest field contains the SHA-1 hash of the POST portion of the BIOS. The event field SHOULD NOT contain the actual POST code but MAY contain informative information about the POST code.
+    [UInt32] 2                = 'EV_UNUSED'                # The event type was never used and is considered reserved.
+    [UInt32] 3                = 'EV_NO_ACTION'             # The event field contains informative data that was not extended into any PCR. The fields: pcrIndex and digest MUST contain the value 0.
+    [UInt32] 4                = 'EV_SEPARATOR'             # Delimits actions taken during the Pre-Operating System State and the Operating System Present State
+    # This will often be "WBCL" - Windows Boot Configuration Log (Microsoft's name for the TCG log)
+    [UInt32] 5                = 'EV_ACTION'                # A specific action measured as a string defined in Section 10.4.3.
+    [UInt32] 6                = 'EV_EVENT_TAG'             # The event field contains the structure defined in Section 10.4.2.1.
+    [UInt32] 7                = 'EV_S_CRTM_CONTENTS'       # The digest field contains is the SHA-1 hash of the SCRTM. The event field SHOULD NOT contain the actual S-CRTM code but MAY contain informative information about the S-CRTM code.
+    [UInt32] 8                = 'EV_S_CRTM_VERSION'        # The event field contains the version string of the SCRTM.
+    [UInt32] 9                = 'EV_CPU_MICROCODE'         # The event field contains a descriptor of the microcode but the digest field contains the actual hash of the microcode patch that was applied.
+    [UInt32] 10               = 'EV_PLATFORM_CONFIG_FLAGS' # The format and contents to be defined by the platform manufacturer. Examples of information contained in this event type are the capabilities of the platform?s measurements, whether the Owner has disabled measurements, etc.
+    [UInt32] 11               = 'EV_TABLE_OF_DEVICES'      # The event field contains the Platform manufacturerprovided Table of Devices or other Platform manufacturer-defined information. The Platform manufacturer defines the content and format of the Table of Devices. The Host Platform Certificate may provide a reference to the meaning of these structures and data. This structure is measured into PCR[1] using the following.
+    [UInt32] 12               = 'EV_COMPACT_HASH'          # This event is entered using the TCG_CompactHashLogExtendEvent. While it can be used by any function, it is typically used by IPL Code to measure events. The contents of the event field is specified by the caller but is not part of the measurement; rather, it is just informative.
+    [UInt32] 13               = 'EV_IPL'                   # The digest field contains the SHA-1 hash of the IPL Code. The event field SHOULD NOT contain the actual IPL Code but MAY contain informative information about the IPL Code. Note: The digest may not cover the entire area hosting the IPL Image, but only the portion that contains the IPL Code. For example, if the IPL Image is a disk drive MBR, this MUST NOT include the portion of the MBR that contains the disk geometry.
+    [UInt32] 14               = 'EV_IPL_PARTITION_DATA'    # The data and partition portion of the IPL Image.
+    [UInt32] 15               = 'EV_NONHOST_CODE'          # The executable component of any Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
+    [UInt32] 16               = 'EV_NONHOST_CONFIG'        # The parameters associated with a Non-host Platform. The contents of the event field are defined by the manufacturer of the Non-host Platform.
+    [UInt32] 17               = 'EV_NONHOST_INFO'          # The event is information about the presence of a Non-host Platform. This information could be, but is not required to be, information such as the Non-host Platform manufacturer, model, type, version, etc. The information and formatting is to be determined by the BIOS.
+    [UInt32] 0x00000012       = 'EV_OMIT_BOOT_DEVICE_EVENTS'
     [UInt32] (2147483648 + 1) = 'EV_EFI_VARIABLE_DRIVER_CONFIG'    # EFI variables, either defined in the EFI spec or private, that typically do not change from boot-to-boot and contain system configuration information.
     [UInt32] (2147483648 + 2) = 'EV_EFI_VARIABLE_BOOT'             # This event is used to measure boot variables. The event field MUST contain a UEFI_VARIABLE_DATA structure
     [UInt32] (2147483648 + 3) = 'EV_EFI_BOOT_SERVICES_APPLICATION' # EFI application (e.g. EFI OSLoader)
@@ -295,54 +295,54 @@ $Script:EventTypeMapping = @{
     [UInt32] (2147483648 + 7) = 'EV_EFI_ACTION'                    # Measurement of a specific string value that indicates a specific event occurred during the platform or OS boot process.
     [UInt32] (2147483648 + 8) = 'EV_EFI_PLATFORM_FIRMWARE_BLOB'    # The event MUST contain a UEFI_PLATFORM_FIRMWARE_BLOB structure
     [UInt32] (2147483648 + 9) = 'EV_EFI_HANDOFF_TABLES'            # Describes the measurement of industry-standard tables and data structure regions.
-    [UInt32] 0x8000000Al = 'EV_EFI_PLATFORM_FIRMWARE_BLOB2'
-    [UInt32] 0x8000000Bl = 'EV_EFI_HANDOFF_TABLES2'
-    [UInt32] 0x80000010l = 'EV_EFI_HCRTM_EVENT'            # This event is used to record an event for the digest extended to PCR[0] as part of an H-CRTM event.
-    [UInt32] 0x800000E0l = 'EV_EFI_VARIABLE_AUTHORITY'     # Documented here: https://docs.microsoft.com/en-us/windows-hardware/test/hlk/testref/trusted-execution-environment-efi-protocol
-    [UInt32] 0x800000E1l = 'EV_EFI_SPDM_FIRMWARE_BLOB'
-    [UInt32] 0x800000E2l = 'EV_EFI_SPDM_FIRMWARE_CONFIG'
+    [UInt32] 0x8000000Al      = 'EV_EFI_PLATFORM_FIRMWARE_BLOB2'
+    [UInt32] 0x8000000Bl      = 'EV_EFI_HANDOFF_TABLES2'
+    [UInt32] 0x80000010l      = 'EV_EFI_HCRTM_EVENT'            # This event is used to record an event for the digest extended to PCR[0] as part of an H-CRTM event.
+    [UInt32] 0x800000E0l      = 'EV_EFI_VARIABLE_AUTHORITY'     # Documented here: https://docs.microsoft.com/en-us/windows-hardware/test/hlk/testref/trusted-execution-environment-efi-protocol
+    [UInt32] 0x800000E1l      = 'EV_EFI_SPDM_FIRMWARE_BLOB'
+    [UInt32] 0x800000E2l      = 'EV_EFI_SPDM_FIRMWARE_CONFIG'
     #----------------------------------PCR Event Types for Intel TXT
-    [UInt32] 0x00000400l = 'EV_TXT_EVENT_BASE'
-    [UInt32] 0x00000401l = 'EV_TXT_PCR_MAPPING'
-    [UInt32] 0x00000402l = 'EV_TXT_HASH_START'
-    [UInt32] 0x00000403l = 'EV_TXT_COMBINED_HASH'
-    [UInt32] 0x00000404l = 'EV_TXT_MLE_HASH'
-    [UInt32] 0x0000040Al = 'EV_TXT_BIOSAC_REG_DATA'
-    [UInt32] 0x0000040Bl = 'EV_TXT_CPU_SCRTM_STAT'
-    [UInt32] 0x0000040Cl = 'EV_TXT_LCP_CONTROL_HASH'
-    [UInt32] 0x0000040Dl = 'EV_TXT_ELEMENTS_HASH'
-    [UInt32] 0x0000040El = 'EV_TXT_STM_HASH'
-    [UInt32] 0x0000040Fl = 'EV_TXT_OSSINITDATA_CAP_HASH'
-    [UInt32] 0x00000410l = 'EV_TXT_SINIT_PUBKEY_HASH'
-    [UInt32] 0x00000411l = 'EV_TXT_LCP_HASH'
-    [UInt32] 0x00000412l = 'EV_TXT_LCP_DETAILS_HASH'
-    [UInt32] 0x00000413l = 'EV_TXT_LCP_AUTHORITIES_HASH'
-    [UInt32] 0x00000414l = 'EV_TXT_NV_INFO_HASH'
-    [UInt32] 0x00000415l = 'EV_TXT_COLD_BOOT_BIOS_HASH'
-    [UInt32] 0x00000416l = 'EV_TXT_KM_HASH'
-    [UInt32] 0x00000417l = 'EV_TXT_BPM_HASH'
-    [UInt32] 0x00000418l = 'EV_TXT_KM_INFO_HASH'
-    [UInt32] 0x00000419l = 'EV_TXT_BPM_INFO_HASH'
-    [UInt32] 0x0000041Al = 'EV_TXT_BOOT_POL_HASH'
-    [UInt32] 0x000004FEl = 'EV_TXT_RANDOM_VALUE'
-    [UInt32] 0x000004FFl = 'EV_TXT_CAP_VALUE'
+    [UInt32] 0x00000400l      = 'EV_TXT_EVENT_BASE'
+    [UInt32] 0x00000401l      = 'EV_TXT_PCR_MAPPING'
+    [UInt32] 0x00000402l      = 'EV_TXT_HASH_START'
+    [UInt32] 0x00000403l      = 'EV_TXT_COMBINED_HASH'
+    [UInt32] 0x00000404l      = 'EV_TXT_MLE_HASH'
+    [UInt32] 0x0000040Al      = 'EV_TXT_BIOSAC_REG_DATA'
+    [UInt32] 0x0000040Bl      = 'EV_TXT_CPU_SCRTM_STAT'
+    [UInt32] 0x0000040Cl      = 'EV_TXT_LCP_CONTROL_HASH'
+    [UInt32] 0x0000040Dl      = 'EV_TXT_ELEMENTS_HASH'
+    [UInt32] 0x0000040El      = 'EV_TXT_STM_HASH'
+    [UInt32] 0x0000040Fl      = 'EV_TXT_OSSINITDATA_CAP_HASH'
+    [UInt32] 0x00000410l      = 'EV_TXT_SINIT_PUBKEY_HASH'
+    [UInt32] 0x00000411l      = 'EV_TXT_LCP_HASH'
+    [UInt32] 0x00000412l      = 'EV_TXT_LCP_DETAILS_HASH'
+    [UInt32] 0x00000413l      = 'EV_TXT_LCP_AUTHORITIES_HASH'
+    [UInt32] 0x00000414l      = 'EV_TXT_NV_INFO_HASH'
+    [UInt32] 0x00000415l      = 'EV_TXT_COLD_BOOT_BIOS_HASH'
+    [UInt32] 0x00000416l      = 'EV_TXT_KM_HASH'
+    [UInt32] 0x00000417l      = 'EV_TXT_BPM_HASH'
+    [UInt32] 0x00000418l      = 'EV_TXT_KM_INFO_HASH'
+    [UInt32] 0x00000419l      = 'EV_TXT_BPM_INFO_HASH'
+    [UInt32] 0x0000041Al      = 'EV_TXT_BOOT_POL_HASH'
+    [UInt32] 0x000004FEl      = 'EV_TXT_RANDOM_VALUE'
+    [UInt32] 0x000004FFl      = 'EV_TXT_CAP_VALUE'
     #----------------------------------PCR Event Types for AMD SecureLaunch
-    [UInt32] 0x00008000l = 'EV_AMD_SL_EVENT_BASE'
-    [UInt32] 0x00008001l = 'EV_AMD_SL_LOAD'
-    [UInt32] 0x00008002l = 'EV_AMD_SL_PSP_FW_SPLT'
-    [UInt32] 0x00008003l = 'EV_AMD_SL_TSME_RB_FUSE'
-    [UInt32] 0x00008004l = 'EV_AMD_SL_PUB_KEY'
-    [UInt32] 0x00008005l = 'EV_AMD_SL_SVN'
-    [UInt32] 0x00008006l = 'EV_AMD_SL_LOAD_1'
-    [UInt32] 0x00008007l = 'EV_AMD_SL_SEPARATOR'
+    [UInt32] 0x00008000l      = 'EV_AMD_SL_EVENT_BASE'
+    [UInt32] 0x00008001l      = 'EV_AMD_SL_LOAD'
+    [UInt32] 0x00008002l      = 'EV_AMD_SL_PSP_FW_SPLT'
+    [UInt32] 0x00008003l      = 'EV_AMD_SL_TSME_RB_FUSE'
+    [UInt32] 0x00008004l      = 'EV_AMD_SL_PUB_KEY'
+    [UInt32] 0x00008005l      = 'EV_AMD_SL_SVN'
+    [UInt32] 0x00008006l      = 'EV_AMD_SL_LOAD_1'
+    [UInt32] 0x00008007l      = 'EV_AMD_SL_SEPARATOR'
 }
 
 $Script:DigestSizeMapping = @{
-    'TPM_ALG_SHA1'    = 20
-    'TPM_ALG_SHA256'  = 32
-    'TPM_ALG_SHA384'  = 48
-    'TPM_ALG_SHA512'  = 64
-    'TPM_ALG_SM3_256' = 32
+    'TPM_ALG_SHA1'     = 20
+    'TPM_ALG_SHA256'   = 32
+    'TPM_ALG_SHA384'   = 48
+    'TPM_ALG_SHA512'   = 64
+    'TPM_ALG_SM3_256'  = 32
     'TPM_ALG_SHA3_256' = 32
     'TPM_ALG_SHA3_384' = 48
     'TPM_ALG_SHA3_512' = 64
@@ -470,23 +470,23 @@ function ConvertTo-CertificateInfo {
 
     $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($CertificateData)
     $result = @{
-        Subject = $cert.Subject
-        Issuer = $cert.Issuer
+        Subject      = $cert.Subject
+        Issuer       = $cert.Issuer
         SerialNumber = $cert.SerialNumber
-        NotBefore = [System.TimeZoneInfo]::ConvertTimeToUtc($cert.NotBefore).ToString("o")
-        NotAfter = [System.TimeZoneInfo]::ConvertTimeToUtc($cert.NotAfter).ToString("o")
-        Thumbprint = $cert.Thumbprint
+        NotBefore    = [System.TimeZoneInfo]::ConvertTimeToUtc($cert.NotBefore).ToString("o")
+        NotAfter     = [System.TimeZoneInfo]::ConvertTimeToUtc($cert.NotAfter).ToString("o")
+        Thumbprint   = $cert.Thumbprint
     }
     if ($Details) {
         $result += @{
-            Version = $cert.Version
+            Version            = $cert.Version
             SignatureAlgorithm = $cert.SignatureAlgorithm
-            PublicKey = @{
-                Oid = $cert.PublicKey.Oid
-                EncodedKeyValue = $cert.PublicKey.EncodedKeyValue.Format($false)
+            PublicKey          = @{
+                Oid               = $cert.PublicKey.Oid
+                EncodedKeyValue   = $cert.PublicKey.EncodedKeyValue.Format($false)
                 EncodedParameters = $cert.PublicKey.EncodedParameters.Format($false)
             }
-            Extensions = $cert.Extensions | ForEach-Object {
+            Extensions         = $cert.Extensions | ForEach-Object {
                 @(
                     $_.GetType().Name
                     if ($_.Critical) {
@@ -515,7 +515,7 @@ function Get-SIPAEventData {
     # We need to identify container structures and recurse accordingly.
     $ContainerType = 0x00010000
 
-    $EventMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$SIPAEventBytes)
+    $EventMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $SIPAEventBytes)
     $EventBinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $EventMemoryStream, ([Text.Encoding]::Unicode)
 
     $evs = while (($EventBinaryReader.BaseStream.Position) -lt $SIPAEventBytes.Count) {
@@ -534,7 +534,7 @@ function Get-SIPAEventData {
                     [PSCustomObject] @{
                         #Category = 'Authority'
                         SIPAEventType = $SIPAEventType
-                        NoAuthority = $EventBytes
+                        NoAuthority   = $EventBytes
                     }
                 }
 
@@ -544,21 +544,23 @@ function Get-SIPAEventData {
                         $bytes = 0
                         $pk = [System.Security.Cryptography.X509Certificates.PublicKey]::CreateFromSubjectPublicKeyInfo($EventBytes, [ref] $bytes)
                         $AuthorityPubKey = @{
-                            Oid = $pk.Oid
-                            EncodedKeyValue = $pk.EncodedKeyValue.Format($false)
+                            Oid               = $pk.Oid
+                            EncodedKeyValue   = $pk.EncodedKeyValue.Format($false)
                             EncodedParameters = $pk.EncodedParameters.Format($false)
                         }
-                    } else {
+                    }
+                    else {
                         $AuthorityPubKey = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
                     [PSCustomObject] @{
                         #Category = 'Authority'
-                        SIPAEventType = $SIPAEventType
+                        SIPAEventType   = $SIPAEventType
                         AuthorityPubKey = $AuthorityPubKey
                     }
                 }
             }
-        } elseif (($SIPAEventTypeVal -band 0x000F0000) -eq $ContainerType) {
+        }
+        elseif (($SIPAEventTypeVal -band 0x000F0000) -eq $ContainerType) {
             switch ($SIPAEventType) {
                 'LoadedModuleAggregation' {
                     $ContainerEvents = Get-SIPAEventData -SIPAEventBytes $EventBytes
@@ -570,7 +572,7 @@ function Get-SIPAEventData {
                     [PSCustomObject] @{
                         #Category = 'Authority'
                         SIPAEventType = $SIPAEventType
-                        LoadedModule = $LoadedModule
+                        LoadedModule  = $LoadedModule
                     }
                 }
 
@@ -582,13 +584,14 @@ function Get-SIPAEventData {
                     }
                 }
             }
-        } else {
+        }
+        else {
             # Each SIPA event data structure will differ depending on the type.
             # Many of these data types are not formally defined but can be easily inferred.
             # If the strucutre is not explicitly stated, it is inferred from multiple events.
             switch ($SIPAEventType) {
-                'Information'         { $EventData = $EventBytes; $Category = 'Information' }
-                'BootCounter'         { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
+                'Information' { $EventData = $EventBytes; $Category = 'Information' }
+                'BootCounter' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
                 'TransferControl' {
                     $TransferControl = [BitConverter]::ToUInt32($EventBytes, 0)
                     $TransferControlText = $TransferControlMapping[$TransferControl]
@@ -600,8 +603,8 @@ function Get-SIPAEventData {
 
                     $EventData = $TransferControlText
                 }
-                'ApplicationReturn'   { $EventData = $EventBytes; $Category = 'Information' }
-                'BitlockerUnlock'     {
+                'ApplicationReturn' { $EventData = $EventBytes; $Category = 'Information' }
+                'BitlockerUnlock' {
                     $FvebUnlockFlag = [BitConverter]::ToUInt32($EventBytes, 0)
                     $Category = 'Information'
                     $FvebUnlockFlags = New-Object 'System.Collections.Generic.List[System.String]'
@@ -618,14 +621,14 @@ function Get-SIPAEventData {
                         Flags = $FvebUnlockFlags
                     }
                 }
-                'EventCounter'        { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
-                'CounterID'           { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
+                'EventCounter' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
+                'CounterID' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'Information' }
                 'MORBitNotCancelable' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
-                'ApplicationSVN'      { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
-                'SVNChainStatus'      { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
+                'ApplicationSVN' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
+                'SVNChainStatus' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
                 # MemoryOverwriteRequest - Introduced in the TCG Platform Reset Attack Mitigation Specification
-                'MORBitAPIStatus'     { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
-                'BootDebugging'       { $EventData = [Bool] $EventBytes[0]; $Category = 'PreOSParameter' }
+                'MORBitAPIStatus' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'Information' }
+                'BootDebugging' { $EventData = [Bool] $EventBytes[0]; $Category = 'PreOSParameter' }
 
                 'BootRevocationList' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
@@ -638,26 +641,26 @@ function Get-SIPAEventData {
                     $Category = 'PreOSParameter'
 
                     $EventData = [PSCustomObject] @{
-                        CreationTime = $CreationTime
+                        CreationTime  = $CreationTime
                         HashAlgorithm = $HashAlgorithm
-                        Digest = $Digest
+                        Digest        = $Digest
                     }
                 }
 
-                'OSKernelDebug'            { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'CodeIntegrity'            { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'TestSigning'              { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'DataExecutionPrevention'  { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
-                'SafeMode'                 { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'WinPE'                    { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'OSKernelDebug' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'CodeIntegrity' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'TestSigning' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'DataExecutionPrevention' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
+                'SafeMode' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'WinPE' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
                 'PhysicalAddressExtension' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
-                'OSDevice'                 { $EventData = $OSDeviceMapping[[BitConverter]::ToInt32($EventBytes, 0)]; $Category = 'OSParameter' }
-                'SystemRoot'               { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'OSParameter' }
-                'HypervisorLaunchType'     { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
-                'HypervisorPath'           { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'OSParameter' }
-                'HypervisorIOMMUPolicy'    { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
-                'HypervisorDebug'          { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'DriverLoadPolicy'         { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'OSParameter' }
+                'OSDevice' { $EventData = $OSDeviceMapping[[BitConverter]::ToInt32($EventBytes, 0)]; $Category = 'OSParameter' }
+                'SystemRoot' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'OSParameter' }
+                'HypervisorLaunchType' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
+                'HypervisorPath' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'OSParameter' }
+                'HypervisorIOMMUPolicy' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
+                'HypervisorDebug' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'DriverLoadPolicy' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'OSParameter' }
 
                 'SIPolicy' {
                     # SIPAEVENT_SI_POLICY_PAYLOAD structure
@@ -681,15 +684,15 @@ function Get-SIPAEventData {
 
                     $EventData = [PSCustomObject] @{
                         PolicyVersion = $PolicyVersion
-                        PolicyName = $PolicyName
+                        PolicyName    = $PolicyName
                         HashAlgorithm = $HashAlgorithm
-                        Digest = $Digest
+                        Digest        = $Digest
                     }
                 }
 
-                'HypervisorMMIONXPolicy'    { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
+                'HypervisorMMIONXPolicy' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
                 'HypervisorMSRFilterPolicy' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
-                'VSMLaunchType'             { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
+                'VSMLaunchType' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'OSParameter' }
 
                 'OSRevocationList' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD structure
@@ -702,9 +705,9 @@ function Get-SIPAEventData {
                     $Category = 'OSParameter'
 
                     $EventData = [PSCustomObject] @{
-                        CreationTime = $CreationTime
+                        CreationTime  = $CreationTime
                         HashAlgorithm = $HashAlgorithm
-                        Digest = $Digest
+                        Digest        = $Digest
                     }
                 }
 
@@ -738,13 +741,13 @@ function Get-SIPAEventData {
                     $Category = 'OSParameter'
 
                     $EventData = [PSCustomObject] @{
-                        KeyAlgID = $KeyAlgID
-                        PublicExponent = ($PublicExponent | ForEach-Object {$_.ToString('X2')}) -join ':'
-                        Modulus = ($Modulus | ForEach-Object {$_.ToString('X2')}) -join ':'
+                        KeyAlgID       = $KeyAlgID
+                        PublicExponent = ($PublicExponent | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        Modulus        = ($Modulus | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
                 }
 
-                'FlightSigning'             { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'FlightSigning' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
                 'PagefileEncryptionEnabled' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
 
                 'VSMIDKSInfo' {
@@ -765,47 +768,47 @@ function Get-SIPAEventData {
                     $Category = 'OSParameter'
 
                     $EventData = [PSCustomObject] @{
-                        KeyAlgID = $KeyAlgID
-                        PublicExponent = ($PublicExponent | ForEach-Object {$_.ToString('X2')}) -join ':'
-                        Modulus = ($Modulus | ForEach-Object {$_.ToString('X2')}) -join ':'
+                        KeyAlgID       = $KeyAlgID
+                        PublicExponent = ($PublicExponent | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        Modulus        = ($Modulus | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
                 }
 
-                'HibernationDisabled'           { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'DumpsDisabled'                 { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
-                'DumpEncryptionEnabled'         { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'HibernationDisabled' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'DumpsDisabled' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
+                'DumpEncryptionEnabled' { $EventData = [Bool] $EventBytes[0]; $Category = 'OSParameter' }
                 # SHA-256 digest of thefollowing regkey value:
                 # CurrentControlSet\Control\CrashControl\EncryptionCertificates\Certificate.1::PublicKey
-                'DumpEncryptionKeyDigest'       { $EventData = $EventBytes; $Category = 'OSParameter' }
-                'LSAISOConfig'                  { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'OSParameter' }
-                'FilePath'                      { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'LoadedImage' }
-                'SIPAEventData'                 { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'LoadedImage' }
-                'HashAlgorithmID'               { $EventData = $HashAlgorithmMapping[[BitConverter]::ToInt32($EventBytes, 0)]; $Category = 'LoadedImage' }
-                'AuthenticodeHash'              { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'LoadedImage' }
-                'AuthorityIssuer'               { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'LoadedImage' }
-                'AuthoritySerial'               { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'LoadedImage' }
-                'ImageBase'                     { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'LoadedImage' }
-                'ImageSize'                     { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'LoadedImage' }
-                'AuthorityPublisher'            { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'LoadedImage' }
-                'AuthoritySHA1Thumbprint'       { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'LoadedImage' }
-                'ImageValidated'                { $EventData = [Bool] $EventBytes[0]; $Category = 'LoadedImage' }
-                'ModuleSVN'                     { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'LoadedImage' }
-                'AIKID'                         { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'Trustpoint' }
-                'AIKPubDigest'                  { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'Trustpoint' }
-                'Quote'                         { $EventData = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'; $Category = 'Trustpoint' }
-                'QuoteSignature'                { $EventData = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'; $Category = 'Trustpoint' }
-                'VBSVSMRequired'                { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
-                'VBSSecurebootRequired'         { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
-                'VBSIOMMURequired'              { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
-                'VBSNXRequired'                 { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
-                'VBSMSRFilteringRequired'       { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
-                'VBSMandatoryEnforcement'       { $EventData = $EventBytes; $Category = 'VBS' }
-                'VBSHVCIPolicy'                 { $EventData = $EventBytes; $Category = 'VBS' }
+                'DumpEncryptionKeyDigest' { $EventData = $EventBytes; $Category = 'OSParameter' }
+                'LSAISOConfig' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'OSParameter' }
+                'FilePath' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'LoadedImage' }
+                'SIPAEventData' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'LoadedImage' }
+                'HashAlgorithmID' { $EventData = $HashAlgorithmMapping[[BitConverter]::ToInt32($EventBytes, 0)]; $Category = 'LoadedImage' }
+                'AuthenticodeHash' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'LoadedImage' }
+                'AuthorityIssuer' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'LoadedImage' }
+                'AuthoritySerial' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'LoadedImage' }
+                'ImageBase' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'LoadedImage' }
+                'ImageSize' { $EventData = [BitConverter]::ToUInt64($EventBytes, 0); $Category = 'LoadedImage' }
+                'AuthorityPublisher' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'LoadedImage' }
+                'AuthoritySHA1Thumbprint' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'LoadedImage' }
+                'ImageValidated' { $EventData = [Bool] $EventBytes[0]; $Category = 'LoadedImage' }
+                'ModuleSVN' { $EventData = [BitConverter]::ToUInt32($EventBytes, 0); $Category = 'LoadedImage' }
+                'AIKID' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'Trustpoint' }
+                'AIKPubDigest' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'Trustpoint' }
+                'Quote' { $EventData = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'; $Category = 'Trustpoint' }
+                'QuoteSignature' { $EventData = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'; $Category = 'Trustpoint' }
+                'VBSVSMRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
+                'VBSSecurebootRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
+                'VBSIOMMURequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
+                'VBSNXRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
+                'VBSMSRFilteringRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
+                'VBSMandatoryEnforcement' { $EventData = $EventBytes; $Category = 'VBS' }
+                'VBSHVCIPolicy' { $EventData = $EventBytes; $Category = 'VBS' }
                 'VBSMicrosoftBootChainRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
-                'ELAMKeyname'                   { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'ELAM' }
-                'ELAMMeasured'                  { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
-                'ELAMConfiguration'             { $EventData = $EventBytes; $Category = 'ELAM' }
-                'ELAMPolicy'                    { $EventData = $EventBytes; $Category = 'ELAM' }
+                'ELAMKeyname' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'ELAM' }
+                'ELAMMeasured' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
+                'ELAMConfiguration' { $EventData = $EventBytes; $Category = 'ELAM' }
+                'ELAMPolicy' { $EventData = $EventBytes; $Category = 'ELAM' }
 
                 'KSRSignature' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD
@@ -816,9 +819,9 @@ function Get-SIPAEventData {
                     [Byte[]] $Signature = $EventBytes[8..(8 + $SignatureLength - 1)]
 
                     $EventData = [PSCustomObject] @{
-                        SignAlgID = [BitConverter]::ToUInt32($EventBytes, 0)
+                        SignAlgID       = [BitConverter]::ToUInt32($EventBytes, 0)
                         SignatureLength = $SignatureLength
-                        Signature = ($Signature | ForEach-Object {$_.ToString('X2')}) -join ':'
+                        Signature       = ($Signature | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
                 }
 
@@ -835,10 +838,10 @@ function Get-SIPAEventData {
 
                             $EventData = [PSCustomObject] @{
                                 VarDataOffset = [BitConverter]::ToUInt32($EventBytes, 4)
-                                HashAlg = $DigestAlgorithmMapping[$HashAlgID]
-                                Options = [BitConverter]::ToUInt32($EventBytes, 12)
-                                SignersCount = [BitConverter]::ToUInt32($EventBytes, 16)
-                                Digest = [BitConverter]::ToString($DigestBytes).Replace('-', '')
+                                HashAlg       = $DigestAlgorithmMapping[$HashAlgID]
+                                Options       = [BitConverter]::ToUInt32($EventBytes, 12)
+                                SignersCount  = [BitConverter]::ToUInt32($EventBytes, 16)
+                                Digest        = [BitConverter]::ToString($DigestBytes).Replace('-', '')
                             }
                         }
 
@@ -899,12 +902,12 @@ function Get-EfiDevicePathProtocol {
 
                         $DeviceInfo = [PSCustomObject] @{
                             Function = $Function
-                            Device = $Device
+                            Device   = $Device
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -917,8 +920,8 @@ function Get-EfiDevicePathProtocol {
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -929,14 +932,14 @@ function Get-EfiDevicePathProtocol {
                         $EndingAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 12)
 
                         $DeviceInfo = [PSCustomObject] @{
-                            MemoryType = $MemoryType
+                            MemoryType      = $MemoryType
                             StartingAddress = $StartingAddress
-                            EndingAddress = $EndingAddress
+                            EndingAddress   = $EndingAddress
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -952,8 +955,8 @@ function Get-EfiDevicePathProtocol {
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -966,8 +969,8 @@ function Get-EfiDevicePathProtocol {
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -978,12 +981,12 @@ function Get-EfiDevicePathProtocol {
 
                         $DeviceInfo = [PSCustomObject] @{
                             InterfaceType = $InterfaceType
-                            BaseAddress = $BaseAddress
+                            BaseAddress   = $BaseAddress
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -993,8 +996,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1011,16 +1014,16 @@ function Get-EfiDevicePathProtocol {
 
                         $DeviceInfo = [PSCustomObject] @{
                             HID = $HID # Device's PnP hardware ID stored in a numeric 32-bit
-                                        # compressed EISA-type ID. This value must match the
-                                        # corresponding _HID in the ACPI name space.
+                            # compressed EISA-type ID. This value must match the
+                            # corresponding _HID in the ACPI name space.
                             UID = $UID # Unique ID that is required by ACPI if two devices have the
-                                        # same _HID. This value must also match the corresponding
-                                        # _UID/_HID pair in the ACPI name space.
+                            # same _HID. This value must also match the corresponding
+                            # _UID/_HID pair in the ACPI name space.
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1034,12 +1037,12 @@ function Get-EfiDevicePathProtocol {
                             HID = $HID
                             UID = $UID
                             CID = $CID # Device's compatible PnP hardware ID stored in a numeric
-                                        # 32-bit compressed EISA-type ID.
+                            # 32-bit compressed EISA-type ID.
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1049,12 +1052,12 @@ function Get-EfiDevicePathProtocol {
 
                         $DeviceInfo = [PSCustomObject] @{
                             ADR = $ADR # For video output devices the value of this
-                                        # field comes from Table B-2 of the ACPI 3.0 specification.
+                            # field comes from Table B-2 of the ACPI 3.0 specification.
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1064,8 +1067,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1094,22 +1097,22 @@ function Get-EfiDevicePathProtocol {
                                 $Signature = [guid]$SignatureBytes
                             }
                             default {
-                                $Signature = ($SignatureBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                                $Signature = ($SignatureBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                             }
                         }
 
                         $DeviceInfo = [PSCustomObject] @{
                             PartitionNumber = $PartitionNumber
-                            PartitionStart = $PartitionStart
-                            PartitionSize = $PartitionSize
-                            Signature = $Signature
-                            MBRType = $MBRType
-                            SignatureType = $SignatureType
+                            PartitionStart  = $PartitionStart
+                            PartitionSize   = $PartitionSize
+                            Signature       = $Signature
+                            MBRType         = $MBRType
+                            SignatureType   = $SignatureType
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1120,8 +1123,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ PathName = $PathName }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1130,8 +1133,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ FvName = [Guid] $DataBytes }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1140,8 +1143,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1151,8 +1154,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1171,13 +1174,13 @@ function Get-EfiDevicePathProtocol {
 
                         $DeviceInfo = [PSCustomObject] @{
                             PrimarySecondary = $PrimarySecondary
-                            SlaveMaster = $SlaveMaster
-                            Lun = $Lun
+                            SlaveMaster      = $SlaveMaster
+                            Lun              = $Lun
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1192,8 +1195,8 @@ function Get-EfiDevicePathProtocol {
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1204,12 +1207,12 @@ function Get-EfiDevicePathProtocol {
 
                         $DeviceInfo = [PSCustomObject] @{
                             ParentPortNumber = $ParentPortNumber
-                            InterfaceNumber = $InterfaceNumber
+                            InterfaceNumber  = $InterfaceNumber
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1220,15 +1223,15 @@ function Get-EfiDevicePathProtocol {
                         $Lun = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
 
                         $DeviceInfo = [PSCustomObject] @{
-                            HBAPortNumber = $HBAPortNumber
+                            HBAPortNumber            = $HBAPortNumber
                             PortMultiplierPortNumber = $PortMultiplierPortNumber
-                            Lun = $Lun
-                            HBADirectConnect = !!($HBAPortNumber -band 0x8000)  # SATA_HBA_DIRECT_CONNECT_FLAG
+                            Lun                      = $Lun
+                            HBADirectConnect         = !!($HBAPortNumber -band 0x8000)  # SATA_HBA_DIRECT_CONNECT_FLAG
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1239,14 +1242,14 @@ function Get-EfiDevicePathProtocol {
                         $Data = [BitConverter]::ToString($Data).Replace('-', '')
 
                         $DeviceInfo = [PSCustomObject] @{
-                            Guid = $Guid
+                            Guid   = $Guid
                             Vendor = $PartitionGUIDMapping[$Guid]
-                            Data = $Data
+                            Data   = $Data
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1256,13 +1259,13 @@ function Get-EfiDevicePathProtocol {
                         $NamespaceUuid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4 + 4)..($FilePathEntryIndex + 4 + 19)]
 
                         $DeviceInfo = [PSCustomObject] @{
-                            NamespaceId = $NamespaceId
+                            NamespaceId   = $NamespaceId
                             NamespaceUuid = $NamespaceUuid
                         }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1272,8 +1275,8 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
-                            Type = $DevicePathType
-                            SubType = $DeviceSubType
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
                             DeviceInfo = $DeviceInfo
                         }
                     }
@@ -1287,10 +1290,10 @@ function Get-EfiDevicePathProtocol {
                 $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
 
                 [PSCustomObject] @{
-                    Type = $DevicePathType
+                    Type    = $DevicePathType
                     SubType = $DeviceSubType
-                    Length = $Length
-                    Data = ($DataBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                    Length  = $Length
+                    Data    = ($DataBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                 }
             }
         }
@@ -1303,7 +1306,7 @@ function Get-EfiDevicePathProtocol {
 }
 
 function Get-TPMDeviceInfo {
-<#
+    <#
 .SYNOPSIS
 
 Retrieves TPM information.
@@ -1327,13 +1330,14 @@ Get-TPMDeviceInfo
 
     if ($Result -eq 0) {
         $DeviceInfo
-    } else {
+    }
+    else {
         Write-Error "Tbsi_GetDeviceInfo: $($TBSReturnCodes[$Result])"
     }
 }
 
 function Get-TCGLogContent {
-<#
+    <#
 .SYNOPSIS
 
 Retrieves the contents of the Trusted Computing Group (TCG) log.
@@ -1390,8 +1394,8 @@ Outputs a byte array consisting of a raw TCG log. Supply the byte array to Conve
     switch ($LogType) {
         'SRTMCurrent' { $LogTypeEnumVal = [TPMBaseServices.TBS_TCGLOG]::TBS_TCGLOG_SRTM_CURRENT }
         'DRTMCurrent' { $LogTypeEnumVal = [TPMBaseServices.TBS_TCGLOG]::TBS_TCGLOG_DRTM_CURRENT }
-        'SRTMBoot'    { $LogTypeEnumVal = [TPMBaseServices.TBS_TCGLOG]::TBS_TCGLOG_SRTM_BOOT }
-        'SRTMResume'  { $LogTypeEnumVal = [TPMBaseServices.TBS_TCGLOG]::TBS_TCGLOG_SRTM_RESUME }
+        'SRTMBoot' { $LogTypeEnumVal = [TPMBaseServices.TBS_TCGLOG]::TBS_TCGLOG_SRTM_BOOT }
+        'SRTMResume' { $LogTypeEnumVal = [TPMBaseServices.TBS_TCGLOG]::TBS_TCGLOG_SRTM_RESUME }
     }
 
     $TCGLogSize = 0
@@ -1439,7 +1443,7 @@ Outputs a byte array consisting of a raw TCG log. Supply the byte array to Conve
 }
 
 filter ConvertTo-TCGEventLog {
-<#
+    <#
 .SYNOPSIS
 
 Parses a Trusted Computing Group (TCG) log.
@@ -1533,7 +1537,8 @@ Outputs a parsed TCG log.
             Write-Error "The supplied byte array is not of sufficient size to be a TCG log. It must be at least $MinimumHeaderLength bytes in length. It is likely that the data supplied to ConvertTo-TCGEventLog is not a TCG log."
             return
         }
-    } else {
+    }
+    else {
         # -LogPath was specified
         $LogFullPath = (Resolve-Path $LogPath).Path
         $TCGLogBytes = [IO.File]::ReadAllBytes($LogFullPath)
@@ -1545,9 +1550,10 @@ Outputs a parsed TCG log.
     }
 
     try {
-        $MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$TCGLogBytes)
+        $MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $TCGLogBytes)
         $BinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $MemoryStream, ([Text.Encoding]::Unicode)
-    } catch {
+    }
+    catch {
         throw $_
         return
     }
@@ -1601,7 +1607,7 @@ Outputs a parsed TCG log.
 
     for ($i = 0; $i -lt $NumberOfAlgorithms; $i++) {
         $DigestSizes[$i] = New-Object -TypeName PSObject -Property @{
-            HashAlg = $DigestAlgorithmMapping[$BinaryReader.ReadUInt16()]
+            HashAlg    = $DigestAlgorithmMapping[$BinaryReader.ReadUInt16()]
             DigestSize = $BinaryReader.ReadUInt16()
         }
     }
@@ -1611,25 +1617,25 @@ Outputs a parsed TCG log.
 
     # Described here: https://msdn.microsoft.com/en-us/library/windows/desktop/bb530712(v=vs.85).aspx
     $TCG_EfiSpecIdEventStruct = [PSCustomObject] @{
-        PSTypeName = 'TCGEfiSpecIdEvent'
-        Signature = $Signature
-        PlatformClass = $PlatformClass
-        SpecVersionMinor = $SpecVersionMinor
-        SpecVersionMajor = $SpecVersionMajor
-        SpecErrata = $SpecErrata
-        UintNSize = $UintNSize
+        PSTypeName         = 'TCGEfiSpecIdEvent'
+        Signature          = $Signature
+        PlatformClass      = $PlatformClass
+        SpecVersionMinor   = $SpecVersionMinor
+        SpecVersionMajor   = $SpecVersionMajor
+        SpecErrata         = $SpecErrata
+        UintNSize          = $UintNSize
         NumberOfAlgorithms = $NumberOfAlgorithms
-        DigestSizes = $DigestSizes
-        VendorInfoSize = $VendorInfoSize
-        VendorInfo = $VendorInfo
+        DigestSizes        = $DigestSizes
+        VendorInfoSize     = $VendorInfoSize
+        VendorInfo         = $VendorInfo
     }
 
     $TCGHeader = [PSCustomObject] @{
         PSTypeName = 'TCGPCREvent'
-        PCR = $PCRIndex
-        EventType = $EventType
-        Digest = $DigestString
-        Event = $TCG_EfiSpecIdEventStruct
+        PCR        = $PCRIndex
+        EventType  = $EventType
+        Digest     = $DigestString
+        Event      = $TCG_EfiSpecIdEventStruct
     }
 
     # Loop through all the remaining measurements, parsing each TCG_PCR_EVENT2 struct along the way
@@ -1648,7 +1654,8 @@ Outputs a parsed TCG log.
             $DigestSize = $DigestSizeMapping[$HashAlg]
 
             $Digests = [BitConverter]::ToString($BinaryReader.ReadBytes($DigestSize)).Replace('-', '')
-        } else {
+        }
+        else {
             $Digests = New-Object -TypeName PSObject[]($DigestValuesCount)
 
             for ($i = 0; $i -lt $DigestValuesCount; $i++) {
@@ -1687,7 +1694,7 @@ Outputs a parsed TCG log.
 
                 $ThisEvent = [PSCustomObject] @{
                     PSTypeName = 'TCGUEFIPlatformFirmwareBlob'
-                    BlobBase = $BlobBase
+                    BlobBase   = $BlobBase
                     BlobLength = $BlobLength
                 }
             }
@@ -1705,7 +1712,8 @@ Outputs a parsed TCG log.
                 if ($PCRIndex -eq -1) {
                     # Extact TrustPoint information - used for log attestation
                     $ThisEvent = Get-SIPAEventData -SIPAEventBytes $EventBytes
-                } else {
+                }
+                else {
                     $ThisEvent = $EventBytes
                 }
             }
@@ -1716,7 +1724,7 @@ Outputs a parsed TCG log.
                 # EFI_TABLE_HEADER: Start
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
 
-                $GPTMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$EventBytes)
+                $GPTMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $EventBytes)
                 $GPTBinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $GPTMemoryStream, ([Text.Encoding]::Unicode)
 
                 $Signature = [Text.Encoding]::ASCII.GetString($GPTBinaryReader.ReadBytes(8)).TrimEnd(@(0))
@@ -1731,8 +1739,8 @@ Outputs a parsed TCG log.
 
                 $TableHeader = [PSCustomObject] @{
                     Signature = $Signature
-                    Revision = $Revision
-                    CRC32 = $CRC32
+                    Revision  = $Revision
+                    CRC32     = $CRC32
                 }
                 # EFI_TABLE_HEADER: End
 
@@ -1751,15 +1759,15 @@ Outputs a parsed TCG log.
                 # EFI_PARTITION_TABLE_HEADER: End
 
                 $EFIPartitionHeader = [PSCustomObject] @{
-                    Header = $TableHeader
-                    MyLBA = $MyLBA
-                    AlternateLBA = $AlternateLBA
-                    FirstUsableLBA = $FirstUsableLBA
-                    LastUsableLBA = $LastUsableLBA
-                    DiskGUID = $DiskGUID
-                    PartitionEntryLBA = $PartitionEntryLBA
+                    Header                   = $TableHeader
+                    MyLBA                    = $MyLBA
+                    AlternateLBA             = $AlternateLBA
+                    FirstUsableLBA           = $FirstUsableLBA
+                    LastUsableLBA            = $LastUsableLBA
+                    DiskGUID                 = $DiskGUID
+                    PartitionEntryLBA        = $PartitionEntryLBA
                     NumberOfPartitionEntries = $NumberOfPartitionEntries
-                    SizeOfPartitionEntry = $SizeOfPartitionEntry
+                    SizeOfPartitionEntry     = $SizeOfPartitionEntry
                     PartitionEntryArrayCRC32 = $PartitionEntryArrayCRC32
                 }
 
@@ -1777,20 +1785,20 @@ Outputs a parsed TCG log.
                     $PartitionName = [Text.Encoding]::Unicode.GetString($GPTBinaryReader.ReadBytes(72)).TrimEnd(@(0))
 
                     $Partitions[$i] = [PSCustomObject] @{
-                        PartitionTypeGUID = $PartitionTypeGUID
-                        PartitionTypeName = $PartitionTypeName
+                        PartitionTypeGUID   = $PartitionTypeGUID
+                        PartitionTypeName   = $PartitionTypeName
                         UniquePartitionGUID = $UniquePartitionGUID
-                        StartingLBA = $StartingLBA
-                        EndingLBA = $EndingLBA
-                        Attributes = $Attributes
-                        PartitionName = $PartitionName
+                        StartingLBA         = $StartingLBA
+                        EndingLBA           = $EndingLBA
+                        Attributes          = $Attributes
+                        PartitionName       = $PartitionName
                     }
                 }
 
                 $ThisEvent = [PSCustomObject] @{
                     EfiPartitionHeader = $EfiPartitionHeader
                     NumberOfPartitions = $NumberOfPartitions
-                    Partitions = $Partitions
+                    Partitions         = $Partitions
                 }
 
                 $GPTBinaryReader.Close()
@@ -1801,8 +1809,9 @@ Outputs a parsed TCG log.
 
                 if ($PCRIndex -gt 11) {
                     $ThisEvent = [Text.Encoding]::ASCII.GetString($EventBytes)
-                } else {
-                    $ThisEvent = ($EventBytes | ForEach-Object {$_.ToString('X2')}) -join ':'
+                }
+                else {
+                    $ThisEvent = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                 }
             }
 
@@ -1827,15 +1836,16 @@ Outputs a parsed TCG log.
 
                     $VariableData = [PSCustomObject] @{
                         SignatureOwner = $SignatureOwner
-                        SignatureData = $SignatureData
+                        SignatureData  = $SignatureData
                     }
-                } else {
+                }
+                else {
                     # Just return a byte array for unknown/new UEFI variables
                     $VariableData = $SignatureDataBytes
                 }
 
                 $ThisEvent = [PSCustomObject] @{
-                    PSTypeName = 'TCGUEFIVariable'
+                    PSTypeName   = 'TCGUEFIVariable'
                     VariableGUID = $VariableName
                     VariableName = $UnicodeName
                     VariableData = $VariableData
@@ -1845,7 +1855,7 @@ Outputs a parsed TCG log.
             'EV_EFI_VARIABLE_DRIVER_CONFIG' {
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
 
-                $VarMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$EventBytes)
+                $VarMemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $EventBytes)
                 $VarBinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $VarMemoryStream, ([Text.Encoding]::Unicode)
 
                 $VariableName = [Guid] $VarBinaryReader.ReadBytes(16)
@@ -1900,25 +1910,26 @@ Outputs a parsed TCG log.
                             }
 
                             [PSCustomObject] @{
-                                PSTypeName = 'EFI.SignatureData'
+                                PSTypeName     = 'EFI.SignatureData'
                                 SignatureOwner = $SignatureOwner
-                                SignatureData = $SignatureData
+                                SignatureData  = $SignatureData
                             }
                         }
 
                         $VariableData = [PSCustomObject] @{
                             SignatureType = $SignatureType
-                            Signature = $Signature
+                            Signature     = $Signature
                         }
                     }
-                } else {
+                }
+                else {
                     $VariableData = $VarBinaryReader.ReadBytes($VariableDataLength)
                 }
 
                 $VarBinaryReader.Close()
 
                 $ThisEvent = [PSCustomObject] @{
-                    PSTypeName = 'TCGUEFIVariable'
+                    PSTypeName   = 'TCGUEFIVariable'
                     VariableGUID = $VariableName
                     VariableName = $UnicodeName
                     VariableData = $VariableData
@@ -1943,9 +1954,9 @@ Outputs a parsed TCG log.
 
                 $ThisEvent = [PSCustomObject] @{
                     ImageLocationInMemory = $ImageLocationInMemory
-                    ImageLengthInMemory = $ImageLengthInMemory
-                    ImageLinkTimeAddress = $ImageLinkTimeAddress
-                    DevicePath = $FilePathList
+                    ImageLengthInMemory   = $ImageLengthInMemory
+                    ImageLinkTimeAddress  = $ImageLinkTimeAddress
+                    DevicePath            = $FilePathList
                 }
             }
 
@@ -1963,7 +1974,8 @@ Outputs a parsed TCG log.
 
                 if ($UnicodeName -eq 'BootOrder') {
                     $VariableData = 1..($VariableDataLength / 2) | ForEach-Object { $BinaryReader.ReadUInt16().ToString('X4') }
-                } elseif ($UnicodeName -match '^Boot[0-9A-F]{4}$') {
+                }
+                elseif ($UnicodeName -match '^Boot[0-9A-F]{4}$') {
                     $VariableDataBytes = $BinaryReader.ReadBytes($VariableDataLength)
 
                     $Attributes = [BitConverter]::ToUInt32($VariableDataBytes, 0)
@@ -1992,21 +2004,22 @@ Outputs a parsed TCG log.
                     # can be computed by subtracting the starting offset of OptionalData from total size in bytes of the EFI_LOAD_OPTION.
                     if (($VariableDataBytes.Count - ($FilePathListEndIndex + 1)) -gt 0) { $OptionalData = $VariableDataBytes[($FilePathListEndIndex + 1)..($VariableDataBytes.Count - 1)] }
 
-                    if ($OptionalData) { $OptionalData = ($OptionalData | ForEach-Object {$_.ToString('X2')}) -join ':' }
+                    if ($OptionalData) { $OptionalData = ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':' }
 
                     $VariableData = [PSCustomObject] @{
-                        Attributes = $Attributes
+                        Attributes         = $Attributes
                         FilePathListLength = $FilePathListLength
-                        Description = $Description.TrimEnd(@(0))
-                        FilePathList = $FilePathList
-                        OptionalData = $OptionalData
+                        Description        = $Description.TrimEnd(@(0))
+                        FilePathList       = $FilePathList
+                        OptionalData       = $OptionalData
                     }
-                } else {
+                }
+                else {
                     $VariableData = $BinaryReader.ReadBytes($VariableDataLength)
                 }
 
                 $ThisEvent = [PSCustomObject] @{
-                    PSTypeName = 'TCGUEFIVariable'
+                    PSTypeName   = 'TCGUEFIVariable'
                     VariableGUID = $VariableName
                     VariableName = $UnicodeName
                     VariableData = $VariableData
@@ -2018,7 +2031,7 @@ Outputs a parsed TCG log.
                 $Tables = [System.Collections.Generic.List[PSCustomObject]]::new()
                 for ($i = 0; $i -lt $NumberOfTables; $i++) {
                     $Table = [PSCustomObject] @{
-                        VendorGUID = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
+                        VendorGUID  = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
                         VendorTable = $BinaryReader.ReadUInt64()
                     }
                     $Tables.Add($Table)
@@ -2035,7 +2048,7 @@ Outputs a parsed TCG log.
                 $NumberOfTables = $BinaryReader.ReadUInt64()
                 for ($i = 0; $i -lt $NumberOfTables; $i++) {
                     $Table = [PSCustomObject] @{
-                        VendorGUID = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
+                        VendorGUID  = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
                         VendorTable = $BinaryReader.ReadUInt64()
                     }
                     $Tables.Add($Table)
@@ -2043,50 +2056,50 @@ Outputs a parsed TCG log.
 
                 $ThisEvent = [PSCustomObject]@{
                     TableDescription = $TableDescription;
-                    Tables = $Tables
+                    Tables           = $Tables
                 }
             }
 
             default {
-                $ThisEvent = ($BinaryReader.ReadBytes($EventSize) | ForEach-Object {$_.ToString('X2')}) -join ':'
+                $ThisEvent = ($BinaryReader.ReadBytes($EventSize) | ForEach-Object { $_.ToString('X2') }) -join ':'
             }
         }
 
         [Ordered] @{
-            PCR = $PCRIndex
+            PCR       = $PCRIndex
             EventType = $EventType
-            Digest = $Digests
-            Event = $ThisEvent
+            Digest    = $Digests
+            Event     = $ThisEvent
         }
     }
 
     $BinaryReader.Close()
 
     $PCRTemplate = [Ordered] @{
-        PCR0 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR1 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR2 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR3 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR4 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR5 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR6 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR7 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR8 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR9 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR10 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR11 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR12 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR13 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR14 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR15 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR16 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR17 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR18 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR19 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR20 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR21 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR22 = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR23 = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR0        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR1        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR2        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR3        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR4        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR5        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR6        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR7        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR8        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR9        = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR10       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR11       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR12       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR13       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR14       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR15       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR16       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR17       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR18       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR19       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR20       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR21       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR22       = (New-Object 'System.Collections.Generic.List[PSObject]')
+        PCR23       = (New-Object 'System.Collections.Generic.List[PSObject]')
         PCRMinusOne = (New-Object 'System.Collections.Generic.List[PSObject]')
     }
 
@@ -2094,7 +2107,8 @@ Outputs a parsed TCG log.
         if ($PCRMeasurement['PCR'] -eq -1) {
             $PCRMeasurement.Remove('PCR')
             $PCRTemplate['PCRMinusOne'].Add(([PSCustomObject] $PCRMeasurement))
-        } else {
+        }
+        else {
             $PCRNum = $PCRMeasurement['PCR']
             $PCRMeasurement.Remove('PCR')
             $PCRTemplate["PCR$($PCRNum)"].Add(([PSCustomObject] $PCRMeasurement))
@@ -2108,9 +2122,9 @@ Outputs a parsed TCG log.
 
     $TCGEventLog = [PSCustomObject] @{
         PSTypeName = 'TCGLog'
-        LogPath = $LogFullPath
-        Header = $TCGHeader
-        Events = ([PSCustomObject] $PCRTemplate)
+        LogPath    = $LogFullPath
+        Header     = $TCGHeader
+        Events     = ([PSCustomObject] $PCRTemplate)
     }
 
     $TCGEventLog
