@@ -887,6 +887,15 @@ function Get-SIPAEventData {
                                 SignersCount = [BitConverter]::ToUInt32($EventBytes, 16)
                                 Digest       = [BitConverter]::ToString($DigestBytes).Replace('-', '')
                             }
+
+                            if ($GatherSBCP) {
+                                Import-Module .\GetSecureBootPolicy.ps1 -Force
+                                $policyData = Get-SecureBootPolicy
+                                if ($policyData.PolicyHash -ieq $EventData.Digest) {
+                                    $policyData = Select-Object -InputObject $policyData -ExcludeProperty PolicyBytes
+                                    Add-Member -InputObject $EventData -MemberType NoteProperty -Name PolicyData -Value $policyData
+                                }
+                            }
                         }
 
                         default {
@@ -1559,7 +1568,10 @@ Outputs a parsed TCG log.
         $MinimizedX509CertInfo,
 
         [string]
-        $DbxInfoPath = "$PSScriptRoot/dbx_info.csv"
+        $DbxInfoPath = "$PSScriptRoot/dbx_info.csv",
+
+        [switch]
+        $GatherSBCP
     )
 
     $DbxInfo = $null
