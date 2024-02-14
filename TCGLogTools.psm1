@@ -2013,6 +2013,40 @@ Outputs a parsed TCG log.
                 }
             }
 
+            'EV_EFI_HANDOFF_TABLES' {
+                $NumberOfTables = $BinaryReader.ReadUInt64()
+                $Tables = [System.Collections.Generic.List[PSCustomObject]]::new()
+                for ($i = 0; $i -lt $NumberOfTables; $i++) {
+                    $Table = [PSCustomObject] @{
+                        VendorGUID = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
+                        VendorTable = $BinaryReader.ReadUInt64()
+                    }
+                    $Tables.Add($Table)
+                }
+
+                $ThisEvent = [PSCustomObject]@{
+                    Tables = $Tables
+                }
+            }
+
+            'EV_EFI_HANDOFF_TABLES2' {
+                $TableDescriptionLength = $BinaryReader.ReadByte()
+                $TableDescription = [Text.Encoding]::ASCII.GetString($BinaryReader.ReadBytes($TableDescriptionLength)).TrimEnd(@(0))
+                $NumberOfTables = $BinaryReader.ReadUInt64()
+                for ($i = 0; $i -lt $NumberOfTables; $i++) {
+                    $Table = [PSCustomObject] @{
+                        VendorGUID = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
+                        VendorTable = $BinaryReader.ReadUInt64()
+                    }
+                    $Tables.Add($Table)
+                }
+
+                $ThisEvent = [PSCustomObject]@{
+                    TableDescription = $TableDescription;
+                    Tables = $Tables
+                }
+            }
+
             default {
                 $ThisEvent = ($BinaryReader.ReadBytes($EventSize) | ForEach-Object {$_.ToString('X2')}) -join ':'
             }
