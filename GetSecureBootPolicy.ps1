@@ -538,6 +538,18 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
         SIPolicyOptions = $SIPolicyOptions
         BCDRules        = $null
         PolicyBytes     = $SecureBootPolicyBytes
+        PolicyHash      = $null
+    }
+
+    $HashStream = $null
+    try {
+        $HashStream = [System.IO.MemoryStream]::new($SecureBootPolicyBytes)
+        $SecureBootPolicy.PolicyHash = (Get-FileHash -Algorithm SHA256 -InputStream $HashStream).Hash
+    }
+    finally {
+        if ($null -ne $HashStream) {
+            $HashStream.Close()
+        }
     }
 
     $RawBCDRules = New-Object -TypeName PSObject[]($BcdRulesCount)
