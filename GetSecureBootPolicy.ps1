@@ -1,5 +1,5 @@
 function Get-SecureBootPolicy {
-<#
+    <#
 .SYNOPSIS
 
 Parses a Secure Boot policy.
@@ -353,7 +353,7 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
     }
 
     function Get-SystemSecureBootPolicyInformation {
-    <#
+        <#
     .SYNOPSIS
 
     Obtains the system Secure Boot policy blob.
@@ -379,9 +379,8 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
         [CmdletBinding()]
         param ()
 
-        # Helper function to interpret NTSTATUS codes as human-readable exceptions 
-        function Get-NTStatusException
-        {
+        # Helper function to interpret NTSTATUS codes as human-readable exceptions
+        function Get-NTStatusException {
             param (
                 [Parameter(Position = 0, Mandatory = $True)]
                 [Int32]
@@ -418,9 +417,6 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
         }
 '@
 
-        $PolicyInfo = New-Object -TypeName SecureBoot.SYSTEM_SECUREBOOT_POLICY_FULL_INFORMATION
-
-        [UInt32] $PolicyInfoSize = [Runtime.InteropServices.Marshal]::SizeOf([Type][SecureBoot.SYSTEM_SECUREBOOT_POLICY_FULL_INFORMATION])
         $ReturnedSize = [UInt32]::MinValue
 
         # dt uxtheme!_SYSTEM_INFORMATION_CLASS
@@ -471,12 +467,12 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
         [Runtime.InteropServices.Marshal]::FreeHGlobal($PtrPolicy)
 
         [PSCustomObject] @{
-            PSTypeName = 'SecureBoot.PolicyInformation'
+            PSTypeName      = 'SecureBoot.PolicyInformation'
             PolicyPublisher = $PolicyInformation.PolicyPublisher
-            PolicyVersion = $PolicyInformation.PolicyVersion
-            PolicyOptions = $PolicyInformation.PolicyOptions
-            PolicySize = $PolicyInformation.PolicySize
-            PolicyBytes = $PolicyBytes
+            PolicyVersion   = $PolicyInformation.PolicyVersion
+            PolicyOptions   = $PolicyInformation.PolicyOptions
+            PolicySize      = $PolicyInformation.PolicySize
+            PolicyBytes     = $PolicyBytes
         }
     }
 
@@ -484,16 +480,18 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
 
     if ($PolicyBytes) {
         $SecureBootPolicyBytes = $PolicyBytes
-    } else {
+    }
+    else {
         # If -PolicyBytes was not specified, obtain the system default Secure Boot policy.
         $PolicyInfo = Get-SystemSecureBootPolicyInformation -ErrorAction Stop
         $SecureBootPolicyBytes = $PolicyInfo.PolicyBytes
     }
 
     try {
-        $MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(,$SecureBootPolicyBytes)
+        $MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $SecureBootPolicyBytes)
         $BinaryReader = New-Object -TypeName IO.BinaryReader -ArgumentList $MemoryStream, ([Text.Encoding]::Unicode)
-    } catch {
+    }
+    catch {
         throw $_
         return
     }
@@ -520,7 +518,7 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
     # Obtain the system integrity (SI) options. These are equivalent to Device Guard
     # code integrity rule options.
     if ($SIPolicyValue) { $SIPolicyOptions = [CodeIntegrity.SIPolicyRules] $SIPolicyValue }
-    
+
     $BcdRulesCount = $BinaryReader.ReadUInt16()
 
     # To do: Registry rules will not be parsed now as I don't have
@@ -532,14 +530,14 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
     }
 
     $SecureBootPolicy = [PSCustomObject] @{
-        PSTypeName = 'SecureBoot.Policy'
-        FormatVersion = $FormatVersion
-        PolicyVersion = $PolicyVersion
+        PSTypeName      = 'SecureBoot.Policy'
+        FormatVersion   = $FormatVersion
+        PolicyVersion   = $PolicyVersion
         PolicyPublisher = $PolicyPublisher
-        CanUpdate = $CanUpdateGuids
+        CanUpdate       = $CanUpdateGuids
         SIPolicyOptions = $SIPolicyOptions
-        BCDRules = $null
-        PolicyBytes = $SecureBootPolicyBytes
+        BCDRules        = $null
+        PolicyBytes     = $SecureBootPolicyBytes
     }
 
     $RawBCDRules = New-Object -TypeName PSObject[]($BcdRulesCount)
@@ -577,30 +575,34 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
         # To add: BOOTMGR, DEVICE, MEMTEST. These are unlikely though.
         if ($ElementType -eq 'Library') {
             $ElementName = $LibraryElementTypes[$ElementTypeVal]
-        } elseif ($ApplicationType -eq 'OSLoader') {
+        }
+        elseif ($ApplicationType -eq 'OSLoader') {
             $ElementName = $OSLoaderElementTypes[$ElementTypeVal]
-        } elseif ($ApplicationType -eq 'Resume') {
+        }
+        elseif ($ApplicationType -eq 'Resume') {
             $ElementName = $ResumeElementTypes[$ElementTypeVal]
-        } elseif ($ApplicationType -eq 'NTLdr') {
+        }
+        elseif ($ApplicationType -eq 'NTLdr') {
             $ElementName = $LegacyLoaderElementTypes[$ElementTypeVal]
-        } elseif ($ElementName -eq $null) {
+        }
+        elseif ($ElementName -eq $null) {
             # Fallback in case there isn't element name coverage
             # This mirrors how bcdedit.exe handles this case.
             $ElementName = "Custom:$($ElementTypeVal.ToString('X8'))"
         }
 
         $RawBCDRules[$i] = [PSCustomObject] @{
-            PSTypeName = 'SecureBoot.BCDRule'
-            ObjectType = $ObjectSubType
-            ObjectName = $ApplicationType
-            ObjectTypeRawValue = "0x$($ObjectTypeVal.ToString('X8'))"
-            ElementName = $ElementName
-            ElementTypeRawValue = "0x$($ElementTypeVal.ToString('X8'))"
-            ElementPolicyType = $null
-            ElementPolicyValue = $null
+            PSTypeName                = 'SecureBoot.BCDRule'
+            ObjectType                = $ObjectSubType
+            ObjectName                = $ApplicationType
+            ObjectTypeRawValue        = "0x$($ObjectTypeVal.ToString('X8'))"
+            ElementName               = $ElementName
+            ElementTypeRawValue       = "0x$($ElementTypeVal.ToString('X8'))"
+            ElementPolicyType         = $null
+            ElementPolicyValue        = $null
             ElementPolicyDefaultValue = $null
             ElementSubjectToBitlocker = $False
-            ElementSubjectToVBS = $False
+            ElementSubjectToVBS       = $False
         }
     }
 
@@ -706,7 +708,8 @@ PLEASE SEND ME YOUR SECURE BOOT POLICIES! I've only encountered three unique pol
 
                 if ($RawValue -eq 0) {
                     $Value = 'CreationNotPermitted'
-                } else {
+                }
+                else {
                     $Value = 'SetAndDeleteNotPermitted'
                 }
             }
