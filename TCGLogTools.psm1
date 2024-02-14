@@ -267,6 +267,36 @@ $Script:OSDeviceMapping = @{
     0x00060000 = 'CIMFS'
 }
 
+$Script:SIPolicyFlagMapping = @{
+    0x00000001 = 'AllowedPrereleaseSigners'
+    0x00000002 = 'AllowedKitsSigners'
+    0x00000004 = 'EnabledUMCI'
+    0x00000008 = 'EnabledBootMenuProtection'
+    0x00000010 = 'AllowedUMCIDebugOptions'
+    0x00000020 = 'EnabledUMCICacheDataVolumes'
+    0x00000040 = 'AllowedSeQuerySigningPolicyExtension'
+    0x00000080 = 'RequiredWHQL'
+    0x00000100 = 'EnabledFilterEditedBootOptions'
+    0x00000200 = 'DisabledUMCIUSN0Protection'
+    0x00000400 = 'DisabledWinloadDebuggingModeMenu'
+    0x00000800 = 'EnabledStrongCryptoForCodeIntegrity'
+    0x00001000 = 'AllowedNonMicrosoftUEFIApplicationsForBitLocke'
+    0x00002000 = 'EnabledAlwaysUsePolicy'
+    0x00004000 = 'EnabledUMCITrustUSN0'
+    0x00008000 = 'DisabledUMCIDebugOptionsTCBLowering'
+    0x00010000 = 'EnabledAuditMode'
+    0x00020000 = 'DisabledFlightSigning'
+    0x00040000 = 'EnabledInheritDefaultPolicy'
+    0x00080000 = 'EnabledUnsignedSystemIntegrityPolicy'
+    0x00100000 = 'AllowedDebugPolicyAugmented'
+    0x00200000 = 'RequiredEVSigners'
+    0x00400000 = 'EnabledBootAuditOnFailure'
+    0x00800000 = 'EnabledAdvancedBootOptionsMenu'
+    0x01000000 = 'DisabledScriptEnforcement'
+    0x02000000 = 'RequiredEnforceStoreApplications'
+    0x04000000 = 'EnabledSecureSettingPolicy'
+}
+
 $Script:EventTypeMapping = @{
     [UInt32] 0                = 'EV_PREBOOT_CERT'          # The event field contains certificates such as the Validation Certificates.
     [UInt32] 1                = 'EV_POST_CODE'             # The digest field contains the SHA-1 hash of the POST portion of the BIOS. The event field SHOULD NOT contain the actual POST code but MAY contain informative information about the POST code.
@@ -839,11 +869,23 @@ function Get-SIPAEventData {
                             $DigestLength = [BitConverter]::ToUInt16($EventBytes, 10)
                             [Byte[]] $DigestBytes = $EventBytes[$VarDataOffset..($VarDataOffset + $DigestLength - 1)]
 
+                            $OptionsFlag = [BitConverter]::ToUInt32($EventBytes, 12)
+                            $OptionsFlags = [System.Collections.Generic.List[string]]::new()
+                            foreach ($f in $Script:SIPolicyFlagMapping.GetEnumerator()) {
+                                if ($OptionsFlag -band $f.Key) {
+                                    $OptionsFlags.Add($f.Value)
+                                    $OptionsFlag = $OptionsFlag -band (-bnot $f.key)
+                                }
+                            }
+                            if ($OptionsFlag -ne 0) {
+                                $OptionsFlags.Add($OptionsFlag.ToString('X8'))
+                            }
+
                             $EventData = [PSCustomObject] @{
-                                HashAlg       = $DigestAlgorithmMapping[$HashAlgID]
-                                Options       = [BitConverter]::ToUInt32($EventBytes, 12)
-                                SignersCount  = [BitConverter]::ToUInt32($EventBytes, 16)
-                                Digest        = [BitConverter]::ToString($DigestBytes).Replace('-', '')
+                                HashAlg      = $DigestAlgorithmMapping[$HashAlgID]
+                                Options      = $OptionsFlags
+                                SignersCount = [BitConverter]::ToUInt32($EventBytes, 16)
+                                Digest       = [BitConverter]::ToString($DigestBytes).Replace('-', '')
                             }
                         }
 
