@@ -601,11 +601,21 @@ function Get-SIPAEventData {
                         $LoadedModule[$ev.SIPAEventType] = $ev.SIPAEventData
                     }
 
-                    [PSCustomObject] @{
+                    $EventData = [PSCustomObject] @{
                         #Category = 'Authority'
                         SIPAEventType = $SIPAEventType
                         LoadedModule  = $LoadedModule
                     }
+
+                    $HashDbxInfo = $null
+                    if ($null -ne $DbxInfo -and $null -ne $LoadedModule["AuthenticodeHash"]) {
+                        $HashDbxInfo = $DbxInfo[$LoadedModule["AuthenticodeHash"]]
+                    }
+                    if ($null -ne $HashDbxInfo) {
+                        Add-Member -InputObject $EventData -MemberType NoteProperty -Name dbx_info -Value $HashDbxInfo
+                    }
+
+                    $EventData
                 }
 
                 default {
