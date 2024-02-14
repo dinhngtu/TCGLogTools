@@ -1,3 +1,5 @@
+#Requires -Version 7
+
 # APIs required to interface with the TPM service
 Add-Type -ErrorAction Stop -TypeDefinition @'
     using System;
