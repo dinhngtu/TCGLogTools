@@ -1370,21 +1370,21 @@ function Get-EfiDevicePathProtocol {
 
 function Get-TPMDeviceInfo {
     <#
-.SYNOPSIS
+    .SYNOPSIS
 
-Retrieves TPM information.
+    Retrieves TPM information.
 
-.DESCRIPTION
+    .DESCRIPTION
 
-Get-TPMDeviceInfo retrieves limited TPM information.
+    Get-TPMDeviceInfo retrieves limited TPM information.
 
-Author: Matthew Graeber (@mattifestation)
-License: BSD 3-Clause
+    Author: Matthew Graeber (@mattifestation)
+    License: BSD 3-Clause
 
-.EXAMPLE
+    .EXAMPLE
 
-Get-TPMDeviceInfo
-#>
+    Get-TPMDeviceInfo
+    #>
 
     $TPM_DEVICE_INFO_Size = 16
 
@@ -1401,49 +1401,49 @@ Get-TPMDeviceInfo
 
 function Get-TCGLogContent {
     <#
-.SYNOPSIS
+    .SYNOPSIS
 
-Retrieves the contents of the Trusted Computing Group (TCG) log.
+    Retrieves the contents of the Trusted Computing Group (TCG) log.
 
-.DESCRIPTION
+    .DESCRIPTION
 
-Get-TCGLogContent retrieves the contents of the TCG log (referred to as the "Windows Boot Configuration Log" (WBCL) by Microsoft). This log captures the various boot and runtime measurements used for device health attestation.
+    Get-TCGLogContent retrieves the contents of the TCG log (referred to as the "Windows Boot Configuration Log" (WBCL) by Microsoft). This log captures the various boot and runtime measurements used for device health attestation.
 
-Author: Matthew Graeber (@mattifestation)
-License: BSD 3-Clause
+    Author: Matthew Graeber (@mattifestation)
+    License: BSD 3-Clause
 
-.PARAMETER LogType
+    .PARAMETER LogType
 
-Specifies the type of TCG log to retrieve. The following arguments are supported:
+    Specifies the type of TCG log to retrieve. The following arguments are supported:
 
-* SRTMCurrent (default): The log associated with PCRs 0-15 for the current session (boot or resume).
-  * This option retrieves the contents of HKLM\SYSTEM\CurrentControlSet\Control\IntegrityServices\WBCL
-* DRTMCurrent: The log associated with PCRs 17-22 for the current session (boot or resume).
-  * This option retrieves the contents of HKLM\SYSTEM\CurrentControlSet\Control\IntegrityServices\WBCLDrtm
-  * The presence of DRTM is validated with NtQuerySystemInformation - SYSTEM_BOOT_ENVIRONMENT_INFORMATION.DbgMeasuredLaunch
-* SRTMBoot: The log associated with PCRs 0-15 for the most recent clean boot session.
-  * This log is retrieved from the most current MeasuredBoot log from a clean boot state. For example, if the most recent log is C:\Windows\Logs\MeasuredBoot\0000000029-0000000003.log, This option will retrieve C:\Windows\Logs\MeasuredBoot\0000000029-0000000000.log (indicating the first MeasuredBoot log taken from a clean boot state).
-* SRTMResume: The log associated with PCRs 0-15 for the most recent resume from hibernation.
-  * This log is retrieved from the most current MeasuredBoot log taken immediately after the clean state boot log. For example, if the clean boot log is C:\Windows\Logs\MeasuredBoot\0000000029-0000000000.log, this options will retrieve C:\Windows\Logs\MeasuredBoot\0000000029-0000000001.log.
+    * SRTMCurrent (default): The log associated with PCRs 0-15 for the current session (boot or resume).
+    * This option retrieves the contents of HKLM\SYSTEM\CurrentControlSet\Control\IntegrityServices\WBCL
+    * DRTMCurrent: The log associated with PCRs 17-22 for the current session (boot or resume).
+    * This option retrieves the contents of HKLM\SYSTEM\CurrentControlSet\Control\IntegrityServices\WBCLDrtm
+    * The presence of DRTM is validated with NtQuerySystemInformation - SYSTEM_BOOT_ENVIRONMENT_INFORMATION.DbgMeasuredLaunch
+    * SRTMBoot: The log associated with PCRs 0-15 for the most recent clean boot session.
+    * This log is retrieved from the most current MeasuredBoot log from a clean boot state. For example, if the most recent log is C:\Windows\Logs\MeasuredBoot\0000000029-0000000003.log, This option will retrieve C:\Windows\Logs\MeasuredBoot\0000000029-0000000000.log (indicating the first MeasuredBoot log taken from a clean boot state).
+    * SRTMResume: The log associated with PCRs 0-15 for the most recent resume from hibernation.
+    * This log is retrieved from the most current MeasuredBoot log taken immediately after the clean state boot log. For example, if the clean boot log is C:\Windows\Logs\MeasuredBoot\0000000029-0000000000.log, this options will retrieve C:\Windows\Logs\MeasuredBoot\0000000029-0000000001.log.
 
-.EXAMPLE
+    .EXAMPLE
 
-Get-TCGLogContent
+    Get-TCGLogContent
 
-Retrieves the TCG log bytes associated with PCRs 0-15 for the current session (boot or resume).
+    Retrieves the TCG log bytes associated with PCRs 0-15 for the current session (boot or resume).
 
-.EXAMPLE
+    .EXAMPLE
 
-Get-TCGLogContent -LogType SRTMBoot
+    Get-TCGLogContent -LogType SRTMBoot
 
-Retrieves the TCG log bytes associated with PCRs 0-15 for the most recent clean boot session.
+    Retrieves the TCG log bytes associated with PCRs 0-15 for the most recent clean boot session.
 
-.OUTPUTS
+    .OUTPUTS
 
-System.Byte[]
+    System.Byte[]
 
-Outputs a byte array consisting of a raw TCG log. Supply the byte array to ConvertTo-TCGEventLog to parse the contents of the log.
-#>
+    Outputs a byte array consisting of a raw TCG log. Supply the byte array to ConvertTo-TCGEventLog to parse the contents of the log.
+    #>
 
     [OutputType([Byte[]])]
     [CmdletBinding()]
@@ -1507,60 +1507,60 @@ Outputs a byte array consisting of a raw TCG log. Supply the byte array to Conve
 
 filter ConvertTo-TCGEventLog {
     <#
-.SYNOPSIS
+    .SYNOPSIS
 
-Parses a Trusted Computing Group (TCG) log.
+    Parses a Trusted Computing Group (TCG) log.
 
-.DESCRIPTION
+    .DESCRIPTION
 
-ConvertTo-TCGEventLog parses one or more TCG logs (referred to as the "Windows Boot Configuration Log" (WBCL) by Microsoft). This log captures the various boot and runtime measurements used for device health attestation. ConvertTo-TCGEventLog will parse the log as a byte array or from one or more log files on disk.
+    ConvertTo-TCGEventLog parses one or more TCG logs (referred to as the "Windows Boot Configuration Log" (WBCL) by Microsoft). This log captures the various boot and runtime measurements used for device health attestation. ConvertTo-TCGEventLog will parse the log as a byte array or from one or more log files on disk.
 
-Author: Matthew Graeber (@mattifestation)
-License: BSD 3-Clause
+    Author: Matthew Graeber (@mattifestation)
+    License: BSD 3-Clause
 
-.PARAMETER LogBytes
+    .PARAMETER LogBytes
 
-Specifies an array of bytes consisting of a raw TCG log.
+    Specifies an array of bytes consisting of a raw TCG log.
 
-.PARAMETER LogPath
+    .PARAMETER LogPath
 
-Specifies the path to one or more TCG log files. On Windows 10 with TPM enabled, these logs are located at %windir%\Logs\MeasuredBoot by default. Optionally, you can specify an alternate TCG log path with HKLM\System\CurrentControlSet\services\TPM\WBCLPath (REG_EXPAND_SZ).
+    Specifies the path to one or more TCG log files. On Windows 10 with TPM enabled, these logs are located at %windir%\Logs\MeasuredBoot by default. Optionally, you can specify an alternate TCG log path with HKLM\System\CurrentControlSet\services\TPM\WBCLPath (REG_EXPAND_SZ).
 
-.PARAMETER
+    .PARAMETER
 
-Specifies that any object that return a signature object should return an X509Certificate object. If this switch is not specified, X509Certificate2 objects will be returned. This switch is present in order to reduce the amount of data in JSON output.
+    Specifies that any object that return a signature object should return an X509Certificate object. If this switch is not specified, X509Certificate2 objects will be returned. This switch is present in order to reduce the amount of data in JSON output.
 
-.EXAMPLE
+    .EXAMPLE
 
-$TCGLogBytes = Get-TCGLogContent -LogType SRTMCurrent
-$TCGLog = ConvertTo-TCGEventLog -LogBytes $TCGLogBytes
+    $TCGLogBytes = Get-TCGLogContent -LogType SRTMCurrent
+    $TCGLog = ConvertTo-TCGEventLog -LogBytes $TCGLogBytes
 
-.EXAMPLE
+    .EXAMPLE
 
-ls C:\Windows\Logs\MeasuredBoot\*.log | ConvertTo-TCGEventLog
+    ls C:\Windows\Logs\MeasuredBoot\*.log | ConvertTo-TCGEventLog
 
-.EXAMPLE
+    .EXAMPLE
 
-ConvertTo-TCGEventLog -LogPath C:\Windows\Logs\MeasuredBoot\0000000001-0000000000.log
+    ConvertTo-TCGEventLog -LogPath C:\Windows\Logs\MeasuredBoot\0000000001-0000000000.log
 
-.EXAMPLE
+    .EXAMPLE
 
-ConvertTo-TCGEventLog -LogBytes (Get-TCGLogContent -LogType SRTMBoot) -MinimizedX509CertInfo | ConvertTo-Json -Depth 8 | Out-File TCGlog.json
+    ConvertTo-TCGEventLog -LogBytes (Get-TCGLogContent -LogType SRTMBoot) -MinimizedX509CertInfo | ConvertTo-Json -Depth 8 | Out-File TCGlog.json
 
-Using the -MinimizedX509CertInfo so that JSON output is not as verbose.
+    Using the -MinimizedX509CertInfo so that JSON output is not as verbose.
 
-.INPUTS
+    .INPUTS
 
-System.String
+    System.String
 
-Accepts one or more TCG log file paths.
+    Accepts one or more TCG log file paths.
 
-.OUTPUTS
+    .OUTPUTS
 
-PSCustomObject
+    PSCustomObject
 
-Outputs a parsed TCG log.
-#>
+    Outputs a parsed TCG log.
+    #>
 
     [CmdletBinding()]
     param (
