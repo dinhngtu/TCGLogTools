@@ -849,8 +849,8 @@ function Get-SIPAEventData {
                 'VBSMicrosoftBootChainRequired' { $EventData = [Bool] $EventBytes[0]; $Category = 'VBS' }
                 'ELAMKeyname' { $EventData = [Text.Encoding]::Unicode.GetString($EventBytes).TrimEnd(@(0)); $Category = 'ELAM' }
                 'ELAMMeasured' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
-                'ELAMConfiguration' { $EventData = $EventBytes; $Category = 'ELAM' }
-                'ELAMPolicy' { $EventData = $EventBytes; $Category = 'ELAM' }
+                'ELAMConfiguration' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
+                'ELAMPolicy' { $EventData = [BitConverter]::ToString($EventBytes).Replace('-', ''); $Category = 'ELAM' }
 
                 'KSRSignature' {
                     # SIPAEVENT_REVOCATION_LIST_PAYLOAD
