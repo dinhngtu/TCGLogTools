@@ -1779,6 +1779,12 @@ filter ConvertTo-TCGEventLog {
                     # Extact TrustPoint information - used for log attestation
                     $ThisEvent = Get-SIPAEventData -SIPAEventBytes $EventBytes
                 }
+                elseif ($EventBytes.Count -eq 17 -and [System.Text.Encoding]::ASCII.GetString($EventBytes[0..15]) -eq "StartupLocality`0") {
+                    $ThisEvent = [PSCustomObject] @{
+                        Signature = "StartupLocality"
+                        Locality  = $EventBytes[16]
+                    }
+                }
                 else {
                     $ThisEvent = $EventBytes
                 }
