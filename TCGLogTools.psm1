@@ -563,6 +563,27 @@ function ConvertTo-CertificateInfo {
     return $result
 }
 
+function Get-EISAProductId {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory, Position = 0)]
+        #[byte[]]
+        [UInt32]
+        $HID
+    )
+
+    $Alphabet = '?ABCDEFGHIJKLMNOPQRSTUVWXYZ?????'
+
+    # it turns out the ACPI_DP EISA ID follows a much simpler format than normal EISA IDs:
+    $HIDString = ''
+    $HIDString += $Alphabet[($HID -shr 10) -band 31]
+    $HIDString += $Alphabet[($HID -shr 5) -band 31]
+    $HIDString += $Alphabet[$HID -band 31]
+    $HIDString += ($HID -shr 16).ToString('X4')
+
+    return $HIDString
+}
+
 # Helper function to retrieve SIPA events - i.e. Windows-specific PCR measurements
 # I still have no clue what SIPA refers to. I use it because it's referenced all over wbcl.h.
 # This function should not be exported.
@@ -1106,7 +1127,7 @@ function Get-EfiDevicePathProtocol {
                         $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
 
                         $DeviceInfo = [PSCustomObject] @{
-                            HID = $HID # Device's PnP hardware ID stored in a numeric 32-bit
+                            HID = Get-EISAProductId $HID # Device's PnP hardware ID stored in a numeric 32-bit
                             # compressed EISA-type ID. This value must match the
                             # corresponding _HID in the ACPI name space.
                             UID = $UID # Unique ID that is required by ACPI if two devices have the
@@ -1127,9 +1148,9 @@ function Get-EfiDevicePathProtocol {
                         $CID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 8)
 
                         $DeviceInfo = [PSCustomObject] @{
-                            HID = $HID
+                            HID = Get-EISAProductId $HID
                             UID = $UID
-                            CID = $CID # Device's compatible PnP hardware ID stored in a numeric
+                            CID = Get-EISAProductId $CID # Device's compatible PnP hardware ID stored in a numeric
                             # 32-bit compressed EISA-type ID.
                         }
 
