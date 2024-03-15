@@ -487,6 +487,36 @@ $Script:PartitionGUIDMapping = @{
     'C12A7328-F81F-11D2-BA4B-00A0C93EC93B' = 'PARTITION_SYSTEM_GUID'
     '57434F53-E3E3-4631-A5C5-26D2243873AA' = 'PARTITION_WINDOWS_SYSTEM_GUID'
 }
+
+$Script:PartitionAttributeFlagMapping = @{
+    [UInt64] 0x0000000000000001ul = 'GPT_ATTRIBUTE_PLATFORM_REQUIRED'
+    [UInt64] 0x0000000000000002ul = 'GPT_ATTRIBUTE_NO_BLOCK_IO_PROTOCOL'
+    [UInt64] 0x0000000000000004ul = 'GPT_ATTRIBUTE_LEGACY_BIOS_BOOTABLE'
+}
+
+$Script:PartitionTypeAttributeFlagMapping = @{
+    'PARTITION_BASIC_DATA_GUID' = @{
+        [UInt64] 0x8000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER'
+        [UInt64] 0x4000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_HIDDEN'
+        [UInt64] 0x2000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY'
+        [UInt64] 0x1000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY'
+        [UInt64] 0x0800000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_OFFLINE'
+        [UInt64] 0x0400000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_DAX'
+        [UInt64] 0x0200000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_SERVICE'
+    }
+    'PARTITION_LDM_DATA_GUID'   = @{
+        [UInt64] 0x8000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER'
+        [UInt64] 0x4000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_HIDDEN'
+        [UInt64] 0x2000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY'
+        [UInt64] 0x1000000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY'
+        [UInt64] 0x0800000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_OFFLINE'
+        [UInt64] 0x0400000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_DAX'
+        [UInt64] 0x0200000000000000ul = 'GPT_BASIC_DATA_ATTRIBUTE_SERVICE'
+    }
+    'PARTITION_SPACES_GUID'     = @{
+        [UInt64] 0x8000000000000000ul = 'GPT_SPACES_ATTRIBUTE_NO_METADATA'
+    }
+}
 #endregion
 
 function ConvertTo-CertificateInfo {
@@ -1180,10 +1210,47 @@ function Get-EfiDevicePathProtocol {
                         }
                     }
 
+                    'MEDIA_CDROM_DP' {
+                        $BootEntry = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $PartitionStart = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+                        $PartitionSize = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4 + 8)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            BootEntry      = $BootEntry
+                            PartitionStart = $PartitionStart
+                            PartitionSize  = $PartitionSize
+                        }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
 
                     'MEDIA_FILEPATH_DP' {
                         $PathName = [Text.Encoding]::Unicode.GetString($DataBytes).TrimEnd(@(0))
                         $DeviceInfo = [PSCustomObject] @{ PathName = $PathName }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MEDIA_PROTOCOL_DP' {
+                        $DeviceInfo = [PSCustomObject] @{ Protocol = [Guid] $DataBytes }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MEDIA_PIWG_FW_FILE_DP' {
+                        $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
 
                         [PSCustomObject] @{
                             Type       = $DevicePathType
@@ -1202,8 +1269,35 @@ function Get-EfiDevicePathProtocol {
                         }
                     }
 
-                    'MEDIA_PIWG_FW_FILE_DP' {
-                        $DeviceInfo = [PSCustomObject] @{ FvFileName = [Guid] $DataBytes }
+                    'MEDIA_RELATIVE_OFFSET_RANGE_DP' {
+                        # skip reserved at 4+0
+                        $StartingOffset = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
+                        $EndingOffset = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4 + 8)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            StartingOffset = $StartingOffset
+                            EndingOffset   = $EndingOffset
+                        }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MEDIA_RAM_DISK_DP' {
+                        $StartingAddr = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4)
+                        $EndingAddr = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 8)
+                        $TypeGuid = [Guid]$DevicePathBytes[($FilePathEntryIndex + 4 + 16)..($FilePathEntryIndex + 4 + 31)]
+                        $Instance = [BitConverter]::ToUInt16($DevicePathBytes, $FilePathEntryIndex + 4 + 32)
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            StartingAddr = $StartingAddr
+                            EndingAddr   = $EndingAddr
+                            TypeGuid     = $TypeGuid
+                            Instance     = $Instance
+                        }
 
                         [PSCustomObject] @{
                             Type       = $DevicePathType
@@ -1856,13 +1950,33 @@ filter ConvertTo-TCGEventLog {
                     $Attributes = $GPTBinaryReader.ReadUInt64()
                     $PartitionName = [Text.Encoding]::Unicode.GetString($GPTBinaryReader.ReadBytes(72)).TrimEnd(@(0))
 
+                    $AttributesFlags = [System.Collections.Generic.List[string]]::new()
+                    foreach ($f in $Script:PartitionAttributeFlagMapping.GetEnumerator()) {
+                        if ($Attributes -band $f.Key) {
+                            $AttributesFlags.Add($f.Value)
+                            $Attributes = $Attributes -band (-bnot $f.key)
+                        }
+                    }
+                    $typeFlags = $Script:PartitionTypeAttributeFlagMapping[$PartitionTypeName]
+                    if ($null -ne $typeFlags) {
+                        foreach ($f in $typeFlags.GetEnumerator()) {
+                            if ($Attributes -band $f.Key) {
+                                $AttributesFlags.Add($f.Value)
+                                $Attributes = $Attributes -band (-bnot $f.key)
+                            }
+                        }
+                    }
+                    if ($Attributes -ne 0) {
+                        $AttributesFlags.Add($Attributes.ToString('X16'))
+                    }
+
                     $Partitions[$i] = [PSCustomObject] @{
                         PartitionTypeGUID   = $PartitionTypeGUID
                         PartitionTypeName   = $PartitionTypeName
                         UniquePartitionGUID = $UniquePartitionGUID
                         StartingLBA         = $StartingLBA
                         EndingLBA           = $EndingLBA
-                        Attributes          = $Attributes
+                        Attributes          = $AttributesFlags
                         PartitionName       = $PartitionName
                     }
                 }
@@ -2008,7 +2122,7 @@ filter ConvertTo-TCGEventLog {
                 }
             }
 
-            'EV_EFI_BOOT_SERVICES_APPLICATION' {
+            { $_ -in 'EV_EFI_BOOT_SERVICES_APPLICATION', 'EV_EFI_BOOT_SERVICES_DRIVER', 'EV_EFI_RUNTIME_SERVICES_DRIVER' } {
                 $EventBytes = $BinaryReader.ReadBytes($EventSize)
 
                 $ImageLocationInMemory = [BitConverter]::ToUInt64($EventBytes, 0)
