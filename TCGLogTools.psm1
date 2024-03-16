@@ -418,6 +418,11 @@ $Script:HardwareDeviceSubTypeMapping = @{
     [Byte] 6 = 'HW_BMC_DP'             # Corresponding struct: BMC_DEVICE_PATH
 }
 
+$Script:EndDeviceSubTypeMapping = @{
+    [Byte] 1    = 'END_INSTANCE_DEVICE_PATH_SUBTYPE'
+    [Byte] 0xff = 'END_ENTIRE_DEVICE_PATH_SUBTYPE'
+}
+
 $Script:MessagingDeviceSubTypeMapping = @{
     [Byte] 0x01 = 'MSG_ATAPI_DP'                # Corresponding struct: ATAPI_DEVICE_PATH
     [Byte] 0x02 = 'MSG_SCSI_DP'                 # Corresponding struct: SCSI_DEVICE_PATH
@@ -516,6 +521,11 @@ $Script:PartitionTypeAttributeFlagMapping = @{
     'PARTITION_SPACES_GUID'     = @{
         [UInt64] 0x8000000000000000ul = 'GPT_SPACES_ATTRIBUTE_NO_METADATA'
     }
+}
+
+$Script:BlPathTypeMapping = @{
+    [UInt32] 3 = 'InternalPath'
+    [UInt32] 4 = 'EfiPath'
 }
 #endregion
 
@@ -1550,7 +1560,34 @@ function Get-EfiDevicePathProtocol {
                 }
             }
 
-            'END_DEVICE_PATH_TYPE' { }
+            'END_DEVICE_PATH_TYPE' {
+                $DeviceSubType = $EndDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+
+                switch ($DeviceSubType) {
+                    'END_INSTANCE_DEVICE_PATH_SUBTYPE' {
+                        [PSCustomObject] @{
+                            Type    = $DevicePathType
+                            SubType = $DeviceSubType
+                        }
+                    }
+
+                    'END_ENTIRE_DEVICE_PATH_SUBTYPE' {
+                        [PSCustomObject] @{
+                            Type    = $DevicePathType
+                            SubType = $DeviceSubType
+                        }
+                    }
+
+                    default {
+                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+
+                        [PSCustomObject] @{
+                            Type    = $DevicePathType
+                            SubType = $DeviceSubType
+                        }
+                    }
+                }
+            }
 
             default {
                 # Until other subtypes are added, just supply the bytes.
@@ -2307,7 +2344,47 @@ filter ConvertTo-TCGEventLog {
                     # can be computed by subtracting the starting offset of OptionalData from total size in bytes of the EFI_LOAD_OPTION.
                     if (($VariableDataBytes.Count - ($FilePathListEndIndex + 1)) -gt 0) { $OptionalData = $VariableDataBytes[($FilePathListEndIndex + 1)..($VariableDataBytes.Count - 1)] }
 
-                    if ($OptionalData) { $OptionalData = ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':' }
+                    # parse a BL_WINDOWS_LOAD_OPTIONS
+                    # see ReactOS EfiInitpCreateApplicationEntry and boot/environ/include/bl.h
+                    $OptionalDataSuccess = $false
+                    if ($null -ne $OptionalData -and $OptionalData.Count -gt 16) {
+                        $ODSignature = [BitConverter]::ToUInt64($OptionalData, 0)
+                        $ODVersion = [BitConverter]::ToUInt32($OptionalData, 8)
+                        $ODLength = [BitConverter]::ToUInt32($OptionalData, 12)
+                        $OSPathOffset = [BitConverter]::ToUInt32($OptionalData, 16)
+                        if ($ODSignature -eq 0x53574F444E4957ul -and $ODVersion -eq 1 -and $ODLength -le $OptionalData.Count -and $OSPathOffset -lt $OptionalData.Count) {
+                            # "WINDOWS\0"
+                            $CommandLineSize = $ODLength - 20
+                            if ($CommandLineSize -gt 0) {
+                                $CommandLine = [Text.Encoding]::Unicode.GetString($OptionalData[20..($CommandLineSize + 20 - 1)])
+                                $CommandLine = $CommandLine.Substring(0, $CommandLine.IndexOf(0))
+                                # next comes a BL_FILE_PATH_DESCRIPTOR
+                                $FilePathDesc = $OptionalData[$OSPathOffset..($OptionalData.Count - 1)]
+                                if ($FilePathDesc.Count -ge 12) {
+                                    $FPVersion = [BitConverter]::ToUInt32($FilePathDesc, 0)
+                                    #$FPLength = [BitConverter]::ToUInt32($FilePathDesc, 4)
+                                    $FPType = [BitConverter]::ToUInt32($FilePathDesc, 8)
+                                    if ($BlPathTypeMapping.ContainsKey($FPType)) {
+                                        $FPType = $BlPathTypeMapping[$FPType]
+                                    }
+                                    $FilePath = $FilePathDesc[12..($FilePathDesc.Count - 1)]
+                                    $OptionalData = @{
+                                        Windows     = $ODVersion;
+                                        CommandLine = $CommandLine;
+                                        FilePath    = @{
+                                            Version = $FPVersion;
+                                            Type    = $FPType;
+                                            Path    = Get-EfiDevicePathProtocol -DevicePathBytes $FilePath
+                                        }
+                                    }
+                                    $OptionalDataSuccess = $true
+                                }
+                            }
+                        }
+                    }
+                    if (!$OptionalDataSuccess) {
+                        $OptionalData = ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':'
+                    }
 
                     $VariableData = [PSCustomObject] @{
                         Attributes         = $Attributes
