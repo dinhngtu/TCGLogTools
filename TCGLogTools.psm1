@@ -983,12 +983,29 @@ function Get-SIPAEventData {
     return $evs
 }
 
+function Get-ChildDevices {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
+        $InputObject
+    )
+
+    $children = $InputObject | `
+        Get-PnpDeviceProperty -KeyName DEVPKEY_Device_Children | `
+        Select-Object -ExpandProperty Data
+    Get-PnpDevice -InstanceId $children
+}
+
 function Get-EfiDevicePathProtocol {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
         [Byte[]]
-        $DevicePathBytes
+        $DevicePathBytes,
+
+        [Parameter()]
+        [switch]
+        $GatherDevice
     )
 
     if (!$DevicePathBytes.Count) {
@@ -997,6 +1014,10 @@ function Get-EfiDevicePathProtocol {
 
     $MoreToParse = $True
     $FilePathEntryIndex = 0
+    $CurrentDevice = $null
+    if ($GatherDevice) {
+        $CurrentDevice = Get-PnpDevice 'ROOT\ACPI_HAL\0000'
+    }
 
     $FilePathList = while ($MoreToParse) {
         # Parse the EFI_DEVICE_PATH_PROTOCOL struct.
@@ -1011,12 +1032,30 @@ function Get-EfiDevicePathProtocol {
 
                 switch ($DeviceSubType) {
                     'HW_PCI_DP' {
-                        $Function = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
-                        $Device = $DevicePathBytes[$FilePathEntryIndex + 4 + 1]
+                        $Function = [UInt32]$DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+                        $Device = [UInt32]$DevicePathBytes[$FilePathEntryIndex + 4 + 1]
 
                         $DeviceInfo = [PSCustomObject] @{
                             Function = $Function
                             Device   = $Device
+                        }
+
+                        if ($null -ne $CurrentDevice) {
+                            if ($CurrentDevice.Service -ine "pci") {
+                                $CurrentDevice = Get-ChildDevices $CurrentDevice | `
+                                    Where-Object Service -ieq "pci"
+                            }
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-ChildDevices $CurrentDevice | `
+                                Get-PnpDeviceProperty -KeyName DEVPKEY_Device_Address | `
+                                Where-Object Data -eq (($Device -shl 16) -bor $Function)
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            Add-Member -InputObject $DeviceInfo -MemberType NoteProperty -Name DeviceInfo -Value  (Select-Object -InputObject $CurrentDevice -Property Class, InstanceId, FriendlyName)
                         }
 
                         [PSCustomObject] @{
@@ -1028,6 +1067,8 @@ function Get-EfiDevicePathProtocol {
 
                     'HW_PCCARD_DP' {
                         $FunctionNumber = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+
+                        $CurrentDevice = $null
 
                         $DeviceInfo = [PSCustomObject] @{
                             FunctionNumber = $FunctionNumber
@@ -1044,6 +1085,8 @@ function Get-EfiDevicePathProtocol {
                         $MemoryType = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
                         $StartingAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
                         $EndingAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 12)
+
+                        $CurrentDevice = $null
 
                         $DeviceInfo = [PSCustomObject] @{
                             MemoryType      = $MemoryType
@@ -1063,6 +1106,8 @@ function Get-EfiDevicePathProtocol {
                         $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 15)..($FilePathEntryIndex + $Length - 1)]
                         $Data = [BitConverter]::ToString($Data).Replace('-', ':')
 
+                        $CurrentDevice = $null
+
                         $DeviceInfo = [PSCustomObject] @{
                             Guid = $Guid
                             Data = $Data
@@ -1077,6 +1122,8 @@ function Get-EfiDevicePathProtocol {
 
                     'HW_CONTROLLER_DP' {
                         $ControllerNumber = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+
+                        $CurrentDevice = $null
 
                         $DeviceInfo = [PSCustomObject] @{
                             ControllerNumber = $ControllerNumber
@@ -1093,6 +1140,8 @@ function Get-EfiDevicePathProtocol {
                         $InterfaceType = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
                         $BaseAddress = [BitConverter]::ToUInt64($DevicePathBytes, $FilePathEntryIndex + 4 + 1)
 
+                        $CurrentDevice = $null
+
                         $DeviceInfo = [PSCustomObject] @{
                             InterfaceType = $InterfaceType
                             BaseAddress   = $BaseAddress
@@ -1108,6 +1157,7 @@ function Get-EfiDevicePathProtocol {
                     default {
                         $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
+                        $CurrentDevice = $null
 
                         [PSCustomObject] @{
                             Type       = $DevicePathType
@@ -1123,16 +1173,34 @@ function Get-EfiDevicePathProtocol {
 
                 switch ($DeviceSubType) {
                     'ACPI_DP' {
-                        $HID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $HID = Get-EISAProductId ([BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0))
                         $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
 
                         $DeviceInfo = [PSCustomObject] @{
-                            HID = Get-EISAProductId $HID # Device's PnP hardware ID stored in a numeric 32-bit
+                            HID = $HID # Device's PnP hardware ID stored in a numeric 32-bit
                             # compressed EISA-type ID. This value must match the
                             # corresponding _HID in the ACPI name space.
                             UID = $UID # Unique ID that is required by ACPI if two devices have the
                             # same _HID. This value must also match the corresponding
                             # _UID/_HID pair in the ACPI name space.
+                        }
+
+                        if ($null -ne $CurrentDevice) {
+                            if ($CurrentDevice.Service -ine "acpi") {
+                                $CurrentDevice = Get-ChildDevices $CurrentDevice | Where-Object Service -ieq "acpi"
+                            }
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-ChildDevices $CurrentDevice | `
+                                Where-Object { "*$HID" -in $_.HardwareID -or "*$HID" -in $_.CompatibleID } | `
+                                Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusNumber | `
+                                Where-Object Data -eq $UID
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            Add-Member -InputObject $DeviceInfo -MemberType NoteProperty -Name DeviceInfo -Value  (Select-Object -InputObject $CurrentDevice -Property Class, InstanceId, FriendlyName)
                         }
 
                         [PSCustomObject] @{
@@ -1143,15 +1211,33 @@ function Get-EfiDevicePathProtocol {
                     }
 
                     'ACPI_EXTENDED_DP' {
-                        $HID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+                        $HID = Get-EISAProductId ([BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0))
                         $UID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 4)
-                        $CID = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 8)
+                        $CID = Get-EISAProductId ([BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 8))
 
                         $DeviceInfo = [PSCustomObject] @{
-                            HID = Get-EISAProductId $HID
+                            HID = $HID
                             UID = $UID
-                            CID = Get-EISAProductId $CID # Device's compatible PnP hardware ID stored in a numeric
+                            CID = $CID # Device's compatible PnP hardware ID stored in a numeric
                             # 32-bit compressed EISA-type ID.
+                        }
+
+                        if ($null -ne $CurrentDevice) {
+                            if ($CurrentDevice.Service -ine "acpi") {
+                                $CurrentDevice = Get-ChildDevices $CurrentDevice | Where-Object Service -ieq "acpi"
+                            }
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-ChildDevices $CurrentDevice | `
+                                Where-Object { "*$HID" -in $_.HardwareID -or "*$CID" -in $_.CompatibleID } | `
+                                Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusNumber | `
+                                Where-Object Data -eq $UID
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            Add-Member -InputObject $DeviceInfo -MemberType NoteProperty -Name DeviceInfo -Value  (Select-Object -InputObject $CurrentDevice -Property Class, InstanceId, FriendlyName)
                         }
 
                         [PSCustomObject] @{
@@ -1163,6 +1249,8 @@ function Get-EfiDevicePathProtocol {
 
                     'ACPI_ADR_DP' {
                         $ADR = [BitConverter]::ToUInt32($DevicePathBytes, $FilePathEntryIndex + 4 + 0)
+
+                        $CurrentDevice = $null
 
                         $DeviceInfo = [PSCustomObject] @{
                             ADR = $ADR # For video output devices the value of this
@@ -1179,6 +1267,7 @@ function Get-EfiDevicePathProtocol {
                     default {
                         $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
+                        $CurrentDevice = $null
 
                         [PSCustomObject] @{
                             Type       = $DevicePathType
@@ -1689,14 +1778,21 @@ filter ConvertTo-TCGEventLog {
         [ValidateNotNullOrEmpty()]
         $LogPath,
 
+        [Parameter()]
         [Switch]
         $MinimizedX509CertInfo,
 
+        [Parameter()]
         [string]
         $DbxInfoPath = "$PSScriptRoot/dbx_info.csv",
 
+        [Parameter()]
         [switch]
-        $GatherSBCP
+        $GatherSBCP,
+
+        [Parameter()]
+        [switch]
+        $GatherDevice
     )
 
     $DbxInfo = $null
@@ -2156,7 +2252,7 @@ filter ConvertTo-TCGEventLog {
                 # Parse all the file list entries
                 if ($LengthOfDevicePath -gt 0) {
                     $DevicePathBytes = $EventBytes[32..(32 + $LengthOfDevicePath - 1)]
-                    $FilePathList = Get-EfiDevicePathProtocol -DevicePathBytes $DevicePathBytes
+                    $FilePathList = Get-EfiDevicePathProtocol -DevicePathBytes $DevicePathBytes -GatherDevice:$GatherDevice
                 }
 
                 $ThisEvent = [PSCustomObject] @{
@@ -2202,7 +2298,7 @@ filter ConvertTo-TCGEventLog {
                     $FilePathListEndIndex = $Index + $FilePathListLength - 1
                     # This will be of type: EFI_DEVICE_PATH_PROTOCOL
                     [Byte[]] $FilePathListBytes = $VariableDataBytes[$Index..$FilePathListEndIndex]
-                    $FilePathList = Get-EfiDevicePathProtocol -DevicePathBytes $FilePathListBytes
+                    $FilePathList = Get-EfiDevicePathProtocol -DevicePathBytes $FilePathListBytes -GatherDevice:$GatherDevice
 
                     $OptionalData = $null
 
