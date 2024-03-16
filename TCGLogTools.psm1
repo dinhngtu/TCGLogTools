@@ -2368,13 +2368,19 @@ filter ConvertTo-TCGEventLog {
                                         $FPType = $BlPathTypeMapping[$FPType]
                                     }
                                     $FilePath = $FilePathDesc[12..($FilePathDesc.Count - 1)]
+                                    if ($FPType -eq "EfiPath") {
+                                        $FilePath = Get-EfiDevicePathProtocol -DevicePathBytes $FilePath
+                                    }
+                                    else {
+                                        $FilePath = ($FilePath | ForEach-Object { $_.ToString('X2') }) -join ':'
+                                    }
                                     $OptionalData = @{
                                         Windows     = $ODVersion;
                                         CommandLine = $CommandLine;
                                         FilePath    = @{
                                             Version = $FPVersion;
                                             Type    = $FPType;
-                                            Path    = Get-EfiDevicePathProtocol -DevicePathBytes $FilePath
+                                            Path    = $FilePath
                                         }
                                     }
                                     $OptionalDataSuccess = $true
