@@ -1019,7 +1019,7 @@ function Set-DeviceInfo {
 
     $DeviceProps = @{}
     $CurrentDevice | Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusTypeGuid, DEVPKEY_Device_BusReportedDeviceDesc | ForEach-Object {
-        $DeviceProps[$_.KeyName.Replace("DEVPKEY_Device_", "")] = $_.Data
+        $DeviceProps[$_.KeyName.Replace("DEVPKEY_", "")] = $_.Data
     }
 
     $ChildDeviceInfo = Select-Object -InputObject $CurrentDevice -Property Service, Class, InstanceId, FriendlyName
