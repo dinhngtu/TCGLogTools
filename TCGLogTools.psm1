@@ -997,11 +997,13 @@ function Get-ChildDevices {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline, Position = 0)]
-        $InputObject
+        $InputObject,
+        [Parameter()]
+        $KeyName = "DEVPKEY_Device_Children"
     )
 
     $children = $InputObject | `
-        Get-PnpDeviceProperty -KeyName DEVPKEY_Device_Children | `
+        Get-PnpDeviceProperty -KeyName $KeyName | `
         Select-Object -ExpandProperty Data
     Get-PnpDevice -InstanceId $children
 }
@@ -1014,15 +1016,19 @@ function Set-DeviceInfo {
         [Parameter(Mandatory, Position = 1)]
         $CurrentDevice,
         [Parameter()]
+        [string[]]$Property = @("Service", "Class", "InstanceId", "FriendlyName"),
+        [Parameter()]
+        [string[]]$DeviceProperty = @("DEVPKEY_Device_BusTypeGuid", "DEVPKEY_Device_BusReportedDeviceDesc"),
+        [Parameter()]
         [switch]$PassThru
     )
 
     $DeviceProps = @{}
-    $CurrentDevice | Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusTypeGuid, DEVPKEY_Device_BusReportedDeviceDesc | ForEach-Object {
+    $CurrentDevice | Get-PnpDeviceProperty -KeyName $DeviceProperty | ForEach-Object {
         $DeviceProps[$_.KeyName.Replace("DEVPKEY_", "")] = $_.Data
     }
 
-    $ChildDeviceInfo = Select-Object -InputObject $CurrentDevice -Property Service, Class, InstanceId, FriendlyName
+    $ChildDeviceInfo = Select-Object -InputObject $CurrentDevice -Property $Property
     Add-Member -InputObject $ChildDeviceInfo -NotePropertyMembers $DeviceProps
     Add-Member -InputObject $InputObject -MemberType NoteProperty -Name DeviceInfo -Value $ChildDeviceInfo
 
@@ -1348,6 +1354,23 @@ function Get-EfiDevicePathProtocol {
                             SignatureType   = $SignatureType
                         }
 
+                        if ($null -ne $CurrentDevice) {
+                            if ($CurrentDevice.Service -ine "disk") {
+                                $CurrentDevice = $null
+                            }
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-ChildDevices $CurrentDevice -KeyName DEVPKEY_Device_RemovalRelations | `
+                                Get-PnpDeviceProperty -KeyName DEVPKEY_Device_Address | `
+                                Where-Object Data -eq $PartitionNumber
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice -DeviceProperty DEVPKEY_Device_PDOName
+                        }
+
                         [PSCustomObject] @{
                             Type       = $DevicePathType
                             SubType    = $DeviceSubType
@@ -1586,6 +1609,23 @@ function Get-EfiDevicePathProtocol {
                         $DeviceInfo = [PSCustomObject] @{
                             NamespaceId   = $NamespaceId
                             NamespaceUuid = $NamespaceUuid
+                        }
+
+                        if ($null -ne $CurrentDevice) {
+                            if ($CurrentDevice.Service -ine "stornvme") {
+                                $CurrentDevice = $null
+                            }
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-ChildDevices $CurrentDevice | `
+                                Get-PnpDeviceProperty -KeyName DEVPKEY_Device_Address | `
+                                Where-Object Data -eq ($NamespaceId - 1)
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
+                        }
+                        if ($null -ne $CurrentDevice) {
+                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice
                         }
 
                         [PSCustomObject] @{
