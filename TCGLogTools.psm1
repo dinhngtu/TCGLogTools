@@ -2406,7 +2406,7 @@ filter ConvertTo-TCGEventLog {
 
                     # parse a BL_WINDOWS_LOAD_OPTIONS
                     # see ReactOS EfiInitpCreateApplicationEntry and boot/environ/include/bl.h
-                    $OptionalDataSuccess = $false
+                    $WindowsLoadOptions = $null
                     if ($null -ne $OptionalData -and $OptionalData.Count -gt 16) {
                         $ODSignature = [BitConverter]::ToUInt64($OptionalData, 0)
                         $ODVersion = [BitConverter]::ToUInt32($OptionalData, 8)
@@ -2434,8 +2434,8 @@ filter ConvertTo-TCGEventLog {
                                     else {
                                         $FilePath = ($FilePath | ForEach-Object { $_.ToString('X2') }) -join ':'
                                     }
-                                    $OptionalData = @{
-                                        Windows     = $ODVersion;
+                                    $WindowsLoadOptions = @{
+                                        Version     = $ODVersion;
                                         CommandLine = $CommandLine;
                                         FilePath    = @{
                                             Version = $FPVersion;
@@ -2443,13 +2443,9 @@ filter ConvertTo-TCGEventLog {
                                             Path    = $FilePath
                                         }
                                     }
-                                    $OptionalDataSuccess = $true
                                 }
                             }
                         }
-                    }
-                    if (!$OptionalDataSuccess) {
-                        $OptionalData = ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
 
                     $VariableData = [PSCustomObject] @{
@@ -2457,7 +2453,12 @@ filter ConvertTo-TCGEventLog {
                         FilePathListLength = $FilePathListLength
                         Description        = $Description.TrimEnd(@(0))
                         FilePathList       = $FilePathList
-                        OptionalData       = $OptionalData
+                    }
+                    if ($null -ne $WindowsLoadOptions) {
+                        Add-Member -InputObject $VariableData -MemberType NoteProperty -Name WindowsLoadOptions -Value $WindowsLoadOptions
+                    }
+                    else {
+                        Add-Member -InputObject $VariableData -MemberType NoteProperty -Name OptionalData -Value ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':'
                     }
                 }
                 else {
