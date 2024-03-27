@@ -1561,6 +1561,8 @@ function Get-EfiDevicePathProtocol {
             }
 
             'END_DEVICE_PATH_TYPE' {
+                $MoreToParse = $false
+
                 $DeviceSubType = $EndDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
 
                 switch ($DeviceSubType) {
@@ -1603,7 +1605,17 @@ function Get-EfiDevicePathProtocol {
         }
 
         $FilePathEntryIndex = $FilePathEntryIndex + $Length
-        $MoreToParse = $null -ne $DevicePathBytes[$FilePathEntryIndex]
+        if ($MoreToParse) {
+            $MoreToParse = $null -ne $DevicePathBytes[$FilePathEntryIndex]
+        }
+    }
+
+    if ($FilePathEntryIndex -lt $DevicePathBytes.Count) {
+        $DataBytes = $DevicePathBytes[$FilePathEntryIndex..($DevicePathBytes.Count - 1)]
+        $TrailingBytes = ($DataBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
+        $FilePathList = [PSCustomObject[]]$FilePathList + @(
+            [PSCustomObject]@{TrailingBytes = $TrailingBytes }
+        )
     }
 
     return $FilePathList
@@ -2362,12 +2374,12 @@ filter ConvertTo-TCGEventLog {
                                 $FilePathDesc = $OptionalData[$OSPathOffset..($OptionalData.Count - 1)]
                                 if ($FilePathDesc.Count -ge 12) {
                                     $FPVersion = [BitConverter]::ToUInt32($FilePathDesc, 0)
-                                    #$FPLength = [BitConverter]::ToUInt32($FilePathDesc, 4)
+                                    $FPLength = [BitConverter]::ToUInt32($FilePathDesc, 4)
                                     $FPType = [BitConverter]::ToUInt32($FilePathDesc, 8)
                                     if ($BlPathTypeMapping.ContainsKey($FPType)) {
                                         $FPType = $BlPathTypeMapping[$FPType]
                                     }
-                                    $FilePath = $FilePathDesc[12..($FilePathDesc.Count - 1)]
+                                    $FilePath = $FilePathDesc[12..($FPLength - 1)]
                                     if ($FPType -eq "EfiPath") {
                                         $FilePath = Get-EfiDevicePathProtocol -DevicePathBytes $FilePath
                                     }
