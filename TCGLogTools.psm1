@@ -1014,26 +1014,18 @@ function Set-DeviceInfo {
         [Parameter(Mandatory, Position = 1)]
         $CurrentDevice,
         [Parameter()]
-        [switch]$Nested,
-        [Parameter()]
         [switch]$PassThru
     )
 
-    $BusTypeGuid = $CurrentDevice | Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusTypeGuid | Select-Object -ExpandProperty Data
-    if ($Nested) {
-        $ChildDeviceInfo = Select-Object -InputObject $CurrentDevice -Property Class, InstanceId, FriendlyName
-        Add-Member -InputObject $ChildDeviceInfo -MemberType NoteProperty -Name BusTypeGuid -Value $BusTypeGuid
-        Add-Member -InputObject $InputObject -MemberType NoteProperty -Name DeviceInfo -Value $ChildDeviceInfo
+    $DeviceProps = @{}
+    $CurrentDevice | Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusTypeGuid, DEVPKEY_Device_BusReportedDeviceDesc | ForEach-Object {
+        $DeviceProps[$_.KeyName.Replace("DEVPKEY_Device_", "")] = $_.Data
     }
-    else {
-        $ChildDeviceInfo = $InputObject
-        Add-Member -InputObject $ChildDeviceInfo -NotePropertyMembers @{
-            Class        = $CurrentDevice.Class;
-            InstanceId   = $CurrentDevice.InstanceId;
-            FriendlyName = $CurrentDevice.FriendlyName;
-            BusTypeGuid  = $BusTypeGuid;
-        }
-    }
+
+    $ChildDeviceInfo = Select-Object -InputObject $CurrentDevice -Property Service, Class, InstanceId, FriendlyName
+    Add-Member -InputObject $ChildDeviceInfo -NotePropertyMembers $DeviceProps
+    Add-Member -InputObject $InputObject -MemberType NoteProperty -Name DeviceInfo -Value $ChildDeviceInfo
+
     if ($PassThru) {
         return $InputObject
     }
@@ -1098,7 +1090,7 @@ function Get-EfiDevicePathProtocol {
                             $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
                         }
                         if ($null -ne $CurrentDevice) {
-                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice -Nested
+                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice
                         }
 
                         [PSCustomObject] @{
@@ -1243,7 +1235,7 @@ function Get-EfiDevicePathProtocol {
                             $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
                         }
                         if ($null -ne $CurrentDevice) {
-                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice -Nested
+                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice
                         }
 
                         [PSCustomObject] @{
@@ -1280,7 +1272,7 @@ function Get-EfiDevicePathProtocol {
                             $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
                         }
                         if ($null -ne $CurrentDevice) {
-                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice -Nested
+                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice
                         }
 
                         [PSCustomObject] @{
@@ -1512,8 +1504,8 @@ function Get-EfiDevicePathProtocol {
                     }
 
                     'MSG_USB_DP' {
-                        $ParentPortNumber = $DevicePathBytes[$FilePathEntryIndex + 4 + 0]
-                        $InterfaceNumber = $DevicePathBytes[$FilePathEntryIndex + 4 + 1]
+                        $ParentPortNumber = [UInt32]$DevicePathBytes[$FilePathEntryIndex + 4 + 0]
+                        $InterfaceNumber = [UInt32]$DevicePathBytes[$FilePathEntryIndex + 4 + 1]
 
                         $DeviceInfo = [PSCustomObject] @{
                             ParentPortNumber = $ParentPortNumber
@@ -1521,21 +1513,26 @@ function Get-EfiDevicePathProtocol {
                         }
 
                         if ($null -ne $CurrentDevice) {
-                            if ($CurrentDevice.Class -ine "USB") {
+                            $BusTypeGuid = $CurrentDevice | Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusTypeGuid | Select-Object -ExpandProperty Data
+                            if ($BusTypeGuid -ine "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}") {
                                 $CurrentDevice = Get-ChildDevices $CurrentDevice | `
-                                    Where-Object Class -ieq "USB"
+                                    Get-PnpDeviceProperty -KeyName DEVPKEY_Device_BusTypeGuid | `
+                                    Where-Object Data -ieq "{9d7debbc-c85d-11d1-9eb4-006008c3a19a}"
+                                if ($null -ne $CurrentDevice) {
+                                    $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
+                                }
                             }
                         }
                         if ($null -ne $CurrentDevice) {
                             $CurrentDevice = Get-ChildDevices $CurrentDevice | `
                                 Get-PnpDeviceProperty -KeyName DEVPKEY_Device_Address | `
-                                Where-Object Data -eq (($Device -shl 16) -bor $Function)
+                                Where-Object Data -eq (($InterfaceNumber -shl 16) -bor ($ParentPortNumber + 1))
                         }
                         if ($null -ne $CurrentDevice) {
                             $CurrentDevice = Get-PnpDevice -InstanceId $CurrentDevice.InstanceId
                         }
                         if ($null -ne $CurrentDevice) {
-                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice -Nested
+                            Set-DeviceInfo -InputObject $DeviceInfo -CurrentDevice $CurrentDevice
                         }
 
                         [PSCustomObject] @{
