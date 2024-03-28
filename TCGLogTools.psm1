@@ -2498,7 +2498,8 @@ filter ConvertTo-TCGEventLog {
                         Add-Member -InputObject $VariableData -MemberType NoteProperty -Name WindowsLoadOptions -Value $WindowsLoadOptions
                     }
                     else {
-                        Add-Member -InputObject $VariableData -MemberType NoteProperty -Name OptionalData -Value ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        $OptionalData = ($OptionalData | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        Add-Member -InputObject $VariableData -MemberType NoteProperty -Name OptionalData -Value $OptionalData
                     }
                 }
                 else {
