@@ -1929,7 +1929,11 @@ filter ConvertTo-TCGEventLog {
 
         [Parameter()]
         [switch]
-        $GatherDevice
+        $GatherDevice,
+
+        [Parameter()]
+        [switch]
+        $Linear
     )
 
     $DbxInfo = $null
@@ -2563,56 +2567,58 @@ filter ConvertTo-TCGEventLog {
 
     $BinaryReader.Close()
 
-    $PCRTemplate = [Ordered] @{
-        PCR0        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR1        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR2        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR3        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR4        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR5        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR6        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR7        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR8        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR9        = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR10       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR11       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR12       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR13       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR14       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR15       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR16       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR17       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR18       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR19       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR20       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR21       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR22       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCR23       = (New-Object 'System.Collections.Generic.List[PSObject]')
-        PCRMinusOne = (New-Object 'System.Collections.Generic.List[PSObject]')
-    }
-
-    foreach ($PCRMeasurement in $Events) {
-        if ($PCRMeasurement['PCR'] -eq -1) {
-            $PCRMeasurement.Remove('PCR')
-            $PCRTemplate['PCRMinusOne'].Add(([PSCustomObject] $PCRMeasurement))
-        }
-        else {
-            $PCRNum = $PCRMeasurement['PCR']
-            $PCRMeasurement.Remove('PCR')
-            $PCRTemplate["PCR$($PCRNum)"].Add(([PSCustomObject] $PCRMeasurement))
-        }
-    }
-
-    foreach ($Key in $PCRTemplate.GetEnumerator().Name) {
-        if ($PCRTemplate[$Key].Count -eq 0) { $PCRTemplate[$Key] = $null }
-        if ($PCRTemplate[$Key].Count -eq 1) { $PCRTemplate[$Key] = $PCRTemplate[$Key][0] }
-    }
-
     $TCGEventLog = [PSCustomObject] @{
         PSTypeName = 'TCGLog'
         LogPath    = $LogFullPath
         Header     = $TCGHeader
-        Events     = ([PSCustomObject] $PCRTemplate)
+        Events     = $Events
+    }
+
+    if (!$Linear) {
+        $PCRTemplate = [Ordered] @{
+            PCR0        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR1        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR2        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR3        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR4        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR5        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR6        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR7        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR8        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR9        = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR10       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR11       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR12       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR13       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR14       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR15       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR16       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR17       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR18       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR19       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR20       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR21       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR22       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCR23       = (New-Object 'System.Collections.Generic.List[PSObject]')
+            PCRMinusOne = (New-Object 'System.Collections.Generic.List[PSObject]')
+        }
+
+        foreach ($PCRMeasurement in $Events) {
+            if ($PCRMeasurement['PCR'] -eq -1) {
+                $PCRMeasurement.Remove('PCR')
+                $PCRTemplate['PCRMinusOne'].Add(([PSCustomObject] $PCRMeasurement))
+            }
+            else {
+                $PCRNum = $PCRMeasurement['PCR']
+                $PCRMeasurement.Remove('PCR')
+                $PCRTemplate["PCR$($PCRNum)"].Add(([PSCustomObject] $PCRMeasurement))
+            }
+        }
+
+        foreach ($Key in $PCRTemplate.GetEnumerator().Name) {
+            if ($PCRTemplate[$Key].Count -eq 0) { $PCRTemplate[$Key] = $null }
+            if ($PCRTemplate[$Key].Count -eq 1) { $PCRTemplate[$Key] = $PCRTemplate[$Key][0] }
+        }
     }
 
     $TCGEventLog
