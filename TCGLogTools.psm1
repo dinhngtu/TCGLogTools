@@ -960,7 +960,7 @@ function Get-SIPAEventData {
                             }
 
                             if ($GatherSBCP) {
-                                Import-Module .\GetSecureBootPolicy.ps1 -Force
+                                Import-Module $PSScriptRoot\GetSecureBootPolicy.ps1 -Force
                                 $policyData = Get-SecureBootPolicy
                                 if ($policyData.PolicyHash -ieq $EventData.Digest) {
                                     $policyData = Select-Object -InputObject $policyData -ExcludeProperty PolicyBytes

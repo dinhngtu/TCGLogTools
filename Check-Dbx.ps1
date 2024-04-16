@@ -14,7 +14,7 @@ else {
 
 $patchfile = (Get-ChildItem $patchfile).FullName
 
-Import-Module -Force .\Get-UEFIDatabaseSignatures.ps1
+Import-Module -Force "$PSScriptRoot\Get-UEFIDatabaseSignatures.ps1"
 
 # Print computer info
 $computer = gwmi Win32_ComputerSystem
