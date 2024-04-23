@@ -527,6 +527,17 @@ $Script:BlPathTypeMapping = @{
     [UInt32] 3 = 'InternalPath'
     [UInt32] 4 = 'EfiPath'
 }
+
+$Script:HandoffTableGUIDMapping = @{
+    '05ad34ba-6f02-4214-952e-4da0398e2bb9' = 'EFI_DXE_SERVICES_TABLE_GUID'
+    '49152e77-1ada-4764-b7a2-7afefed95e8b' = 'EFI_DEBUG_IMAGE_INFO_TABLE_GUID'
+    '8868e871-e4f1-11d3-bc22-0080c73c8881' = 'EFI_ACPI_TABLE_GUID'
+    'eb9d2d2f-2d88-11d3-9a16-0090273fc14d' = 'MPS_TABLE_GUID'
+    'eb9d2d30-2d88-11d3-9a16-0090273fc14d' = 'ACPI_TABLE_GUID'
+    'eb9d2d31-2d88-11d3-9a16-0090273fc14d' = 'SMBIOS_TABLE_GUID'
+    'eb9d2d32-2d88-11d3-9a16-0090273fc14d' = 'SAL_SYSTEM_TABLE_GUID'
+    'f2fd1544-9794-4a2c-992e-e5bbcf20e394' = 'SMBIOS3_TABLE_GUID'
+}
 #endregion
 
 function ConvertTo-CertificateInfo {
@@ -2522,8 +2533,10 @@ filter ConvertTo-TCGEventLog {
                 $NumberOfTables = $BinaryReader.ReadUInt64()
                 $Tables = [System.Collections.Generic.List[PSCustomObject]]::new()
                 for ($i = 0; $i -lt $NumberOfTables; $i++) {
+                    $VendorGUID = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
                     $Table = [PSCustomObject] @{
-                        VendorGUID  = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
+                        VendorGUID  = $VendorGUID
+                        Vendor      = $HandoffTableGUIDMapping[$VendorGUID.ToString()]
                         VendorTable = $BinaryReader.ReadUInt64()
                     }
                     $Tables.Add($Table)
@@ -2539,8 +2552,10 @@ filter ConvertTo-TCGEventLog {
                 $TableDescription = [Text.Encoding]::ASCII.GetString($BinaryReader.ReadBytes($TableDescriptionLength)).TrimEnd(@(0))
                 $NumberOfTables = $BinaryReader.ReadUInt64()
                 for ($i = 0; $i -lt $NumberOfTables; $i++) {
+                    $VendorGUID = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
                     $Table = [PSCustomObject] @{
-                        VendorGUID  = [Guid][Byte[]] $BinaryReader.ReadBytes(16)
+                        VendorGUID  = $VendorGUID
+                        Vendor      = $HandoffTableGUIDMapping[$VendorGUID.ToString()]
                         VendorTable = $BinaryReader.ReadUInt64()
                     }
                     $Tables.Add($Table)
