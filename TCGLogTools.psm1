@@ -2317,7 +2317,7 @@ filter ConvertTo-TCGEventLog {
                         'A5C059A1-94E4-4AA7-87B5-AB155C2BF072' = 'EFI_CERT_X509_GUID'   # Most often used for db
                     }
 
-                    while ($VarBinaryReader.PeekChar() -ne -1) {
+                    $VariableData = while ($VarBinaryReader.PeekChar() -ne -1) {
                         $SignatureType = $SignatureTypeMapping[([Guid][Byte[]] $VarBinaryReader.ReadBytes(16)).Guid]
                         $SignatureListSize = $VarBinaryReader.ReadUInt32()
                         $SignatureHeaderSize = $VarBinaryReader.ReadUInt32()
@@ -2360,7 +2360,7 @@ filter ConvertTo-TCGEventLog {
                             }
                         }
 
-                        $VariableData = [PSCustomObject] @{
+                        [PSCustomObject] @{
                             SignatureType = $SignatureType
                             Signature     = $Signature
                         }
