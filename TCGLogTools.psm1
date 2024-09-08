@@ -2138,7 +2138,7 @@ filter ConvertTo-TCGEventLog {
                     }
                 }
                 else {
-                    $ThisEvent = $EventBytes
+                    $ThisEvent = ($EventBytes | ForEach-Object { $_.ToString('X2') }) -join ':'
                 }
             }
 
