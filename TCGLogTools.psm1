@@ -2327,9 +2327,23 @@ filter ConvertTo-TCGEventLog {
                         'C1C41626-504C-4092-ACA9-41F936934328' = 'EFI_CERT_SHA256_GUID' # Most often used for dbx
                         'A5C059A1-94E4-4AA7-87B5-AB155C2BF072' = 'EFI_CERT_X509_GUID'   # Most often used for db
                     }
+                    $SignatureOwnerMapping = @{
+                        '77fa9abd-0359-4d32-bd60-28f4e78f784b' = 'MICROSOFT_VENDOR_GUID'
+                        '9d132b6c-59d5-4388-ab1c-185cfcb2eb92' = 'MICROSOFT_DBX_SVN_GUID'
+                    }
+                    # https://github.com/pbatard/rufus/issues/2244#issuecomment-2243661539
+                    $ApplicationMapping = @{
+                        '9d132b61-59d5-4388-ab1c-185c3cb2eb92' = 'EFI_BOOTMGR_DBX_SVN_GUID'
+                        'e8f82e9d-e127-4158-a488-4c18abe2f284' = 'EFI_CDBOOT_DBX_SVN_GUID'
+                        'c999cac2-7ffe-496f-8127-9e2a8a535976' = 'EFI_WDSMGR_DBX_SVN_GUID'
+                    }
 
                     $VariableData = while ($VarBinaryReader.PeekChar() -ne -1) {
-                        $SignatureType = $SignatureTypeMapping[([Guid][Byte[]] $VarBinaryReader.ReadBytes(16)).Guid]
+                        $SignatureTypeGUID = ([Guid][Byte[]] $VarBinaryReader.ReadBytes(16)).Guid
+                        $SignatureTypeText = $SignatureTypeMapping[$SignatureTypeGUID]
+                        if (!$SignatureTypeText) {
+                            $SignatureTypeText = $SignatureTypeGUID
+                        }
                         $SignatureListSize = $VarBinaryReader.ReadUInt32()
                         $SignatureHeaderSize = $VarBinaryReader.ReadUInt32()
                         $SignatureSize = $VarBinaryReader.ReadUInt32()
@@ -2342,20 +2356,42 @@ filter ConvertTo-TCGEventLog {
                         $Signature = 1..$SignatureCount | ForEach-Object {
                             $SignatureDataBytes = $VarBinaryReader.ReadBytes($SignatureSize)
 
-                            $SignatureOwner = [Guid][Byte[]] $SignatureDataBytes[0..15]
+                            $SignatureOwnerGUID = [Guid][Byte[]] $SignatureDataBytes[0..15]
+                            $SignatureOwnerText = $SignatureOwnerMapping[$SignatureOwnerGUID.Guid]
+                            if (!$SignatureOwnerText) {
+                                $SignatureOwnerText = $SignatureOwnerGUID
+                            }
 
-                            switch ($SignatureType) {
+                            $SignatureData = $null
+                            switch ($SignatureTypeText) {
                                 'EFI_CERT_SHA256_GUID' {
-                                    $Hash = ([Byte[]] $SignatureDataBytes[0x10..0x2F] | ForEach-Object { $_.ToString('X2') }) -join ''
-                                    $HashDbxInfo = $null
-                                    if ($UnicodeName -eq 'dbx' -and $null -ne $DbxInfo) {
-                                        $HashDbxInfo = $DbxInfo[$Hash]
-                                    }
-                                    $SignatureData = @{
-                                        Hash = $Hash
-                                    }
-                                    if ($null -ne $HashDbxInfo) {
-                                        $SignatureData["dbx_info"] = $HashDbxInfo
+                                    if ($SignatureOwnerText -eq "MICROSOFT_DBX_SVN_GUID") {
+                                        $ApplicationGUID = [Guid][Byte[]]($SignatureDataBytes[0x11..0x20])
+                                        $ApplicationName = $ApplicationMapping[$ApplicationGUID.Guid]
+                                        if (!$ApplicationName) {
+                                            $ApplicationName = $ApplicationGUID
+                                        }
+                                        $SignatureData = @{
+                                            Reserved1 = $SignatureDataBytes[0x10]
+                                            ApplicationName = $ApplicationName
+                                            MinVersion = @{
+                                                Minor = [BitConverter]::ToUInt16($SignatureDataBytes, 0x21)
+                                                Major = [BitConverter]::ToUInt16($SignatureDataBytes, 0x23)
+                                            }
+                                            Reserved2 = [BitConverter]::ToString($SignatureDataBytes[0x25..0x2F]).Replace('-', ':')
+                                        }
+                                    } else {
+                                        $Hash = ([Byte[]] $SignatureDataBytes[0x10..0x2F] | ForEach-Object { $_.ToString('X2') }) -join ''
+                                        $HashDbxInfo = $null
+                                        if ($UnicodeName -eq 'dbx' -and $null -ne $DbxInfo) {
+                                            $HashDbxInfo = $DbxInfo[$Hash]
+                                        }
+                                        $SignatureData = @{
+                                            Hash = $Hash
+                                        }
+                                        if ($null -ne $HashDbxInfo) {
+                                            $SignatureData["dbx_info"] = $HashDbxInfo
+                                        }
                                     }
                                 }
 
@@ -2366,13 +2402,13 @@ filter ConvertTo-TCGEventLog {
 
                             [PSCustomObject] @{
                                 PSTypeName     = 'EFI.SignatureData'
-                                SignatureOwner = $SignatureOwner
+                                SignatureOwner = $SignatureOwnerText
                                 SignatureData  = $SignatureData
                             }
                         }
 
                         [PSCustomObject] @{
-                            SignatureType = $SignatureType
+                            SignatureType = $SignatureTypeText
                             Signature     = $Signature
                         }
                     }
