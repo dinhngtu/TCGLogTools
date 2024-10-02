@@ -2366,6 +2366,8 @@ filter ConvertTo-TCGEventLog {
                             switch ($SignatureTypeText) {
                                 'EFI_CERT_SHA256_GUID' {
                                     if ($SignatureOwnerText -eq "MICROSOFT_DBX_SVN_GUID") {
+                                        // https://github.com/microsoft/MSRC-Security-Research/blob/master/presentations/2024_05_OffensiveCon/OffensiveCon24_Booting_With_Caution_BDemirkapi.pdf
+                                        // https://github.com/microsoft/MSRC-Security-Research/blob/master/presentations/2024_08_BlackHatUSA/Locked_Down_but_Not_Out__Fighting_the_Hidden_War_In_Your_Bootloader.pdf
                                         $ApplicationGUID = [Guid][Byte[]]($SignatureDataBytes[0x11..0x20])
                                         $ApplicationName = $ApplicationMapping[$ApplicationGUID.Guid]
                                         if (!$ApplicationName) {
