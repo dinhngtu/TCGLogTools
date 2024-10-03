@@ -1609,6 +1609,84 @@ function Get-EfiDevicePathProtocol {
                         }
                     }
 
+                    'MSG_MAC_ADDR_DP' {
+                        $MacAddress = [BitConverter]::ToString($DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + 4 + 31)])
+                        $IfType = $DevicePathBytes[$FilePathEntryIndex + 4 + 32]
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            MacAddress = $MacAddress
+                            IfType     = $IfType
+                        }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_IPv4_DP' {
+                        $MsgIPv4MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + $Length - 1)])
+                        $MsgIPv4Reader = New-Object -TypeName IO.BinaryReader -ArgumentList $MsgIPv4MemoryStream, ([Text.Encoding]::Unicode)
+
+                        $LocalIpAddress = ($MsgIPv4Reader.ReadBytes(4) | ForEach-Object { $_.ToString() }) -join '.'
+                        $RemoteIpAddress = ($MsgIPv4Reader.ReadBytes(4) | ForEach-Object { $_.ToString() }) -join '.'
+                        $LocalPort = $MsgIPv4Reader.ReadUInt16()
+                        $RemotePort = $MsgIPv4Reader.ReadUInt16()
+                        $Protocol = $MsgIPv4Reader.ReadUInt16()
+                        $StaticIpAddress = $MsgIPv4Reader.ReadByte()
+                        $GatewayIpAddress = ($MsgIPv4Reader.ReadBytes(4) | ForEach-Object { $_.ToString() }) -join '.'
+                        $SubnetMask = ($MsgIPv4Reader.ReadBytes(4) | ForEach-Object { $_.ToString() }) -join '.'
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            LocalIpAddress   = $LocalIpAddress
+                            RemoteIpAddress  = $RemoteIpAddress
+                            LocalPort        = $LocalPort
+                            RemotePort       = $RemotePort
+                            Protocol         = $Protocol
+                            StaticIpAddress  = $StaticIpAddress
+                            GatewayIpAddress = $GatewayIpAddress
+                            SubnetMask       = $SubnetMask
+                        }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
+                    'MSG_IPv6_DP' {
+                        $MsgIPv6MemoryStream = New-Object -TypeName IO.MemoryStream -ArgumentList @(, $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + $Length - 1)])
+                        $MsgIPv6Reader = New-Object -TypeName IO.BinaryReader -ArgumentList $MsgIPv6MemoryStream, ([Text.Encoding]::Unicode)
+
+                        $LocalIpAddress = ($MsgIPv6Reader.ReadBytes(16) | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        $RemoteIpAddress = ($MsgIPv6Reader.ReadBytes(16) | ForEach-Object { $_.ToString('X2') }) -join ':'
+                        $LocalPort = $MsgIPv6Reader.ReadUInt16()
+                        $RemotePort = $MsgIPv6Reader.ReadUInt16()
+                        $Protocol = $MsgIPv6Reader.ReadUInt16()
+                        $IpAddressOrigin = $MsgIPv6Reader.ReadByte()
+                        $PrefixLength = $MsgIPv6Reader.ReadByte()
+                        $GatewayIpAddress = ($MsgIPv6Reader.ReadBytes(16) | ForEach-Object { $_.ToString('X2') }) -join ':'
+
+                        $DeviceInfo = [PSCustomObject] @{
+                            LocalIpAddress   = $LocalIpAddress
+                            RemoteIpAddress  = $RemoteIpAddress
+                            LocalPort        = $LocalPort
+                            RemotePort       = $RemotePort
+                            Protocol         = $Protocol
+                            IpAddressOrigin  = $IpAddressOrigin
+                            PrefixLength     = $PrefixLength
+                            GatewayIpAddress = $GatewayIpAddress
+                        }
+
+                        [PSCustomObject] @{
+                            Type       = $DevicePathType
+                            SubType    = $DeviceSubType
+                            DeviceInfo = $DeviceInfo
+                        }
+                    }
+
                     'MSG_VENDOR_DP' {
                         $Guid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + 4 + 15)]
                         $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 16)..($FilePathEntryIndex + $Length - 1)]
