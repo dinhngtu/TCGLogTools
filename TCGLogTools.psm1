@@ -2387,15 +2387,16 @@ filter ConvertTo-TCGEventLog {
                                             $ApplicationName = $ApplicationGUID
                                         }
                                         $SignatureData = @{
-                                            Reserved1 = $SignatureDataBytes[0x10]
+                                            Reserved1       = $SignatureDataBytes[0x10]
                                             ApplicationName = $ApplicationName
-                                            MinVersion = @{
+                                            MinVersion      = @{
                                                 Minor = [BitConverter]::ToUInt16($SignatureDataBytes, 0x21)
                                                 Major = [BitConverter]::ToUInt16($SignatureDataBytes, 0x23)
                                             }
-                                            Reserved2 = [BitConverter]::ToString($SignatureDataBytes[0x25..0x2F]).Replace('-', ':')
+                                            Reserved2       = [BitConverter]::ToString($SignatureDataBytes[0x25..0x2F]).Replace('-', ':')
                                         }
-                                    } else {
+                                    }
+                                    else {
                                         $Hash = ([Byte[]] $SignatureDataBytes[0x10..0x2F] | ForEach-Object { $_.ToString('X2') }) -join ''
                                         $HashDbxInfo = $null
                                         if ($UnicodeName -eq 'dbx' -and $null -ne $DbxInfo) {
