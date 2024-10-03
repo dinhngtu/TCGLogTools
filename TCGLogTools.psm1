@@ -1156,7 +1156,7 @@ function Get-EfiDevicePathProtocol {
 
                     'HW_VENDOR_DP' {
                         $Guid = [Guid][byte[]] $DevicePathBytes[($FilePathEntryIndex + 4)..($FilePathEntryIndex + 4 + 15)]
-                        $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 15)..($FilePathEntryIndex + $Length - 1)]
+                        $Data = $DevicePathBytes[($FilePathEntryIndex + 4 + 16)..($FilePathEntryIndex + $Length - 1)]
                         $Data = [BitConverter]::ToString($Data).Replace('-', ':')
 
                         $CurrentDevice = $null
