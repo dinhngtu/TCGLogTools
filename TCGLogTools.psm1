@@ -1081,7 +1081,11 @@ function Get-EfiDevicePathProtocol {
 
         switch ($DevicePathType) {
             'HARDWARE_DEVICE_PATH' {
-                $DeviceSubType = $HardwareDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+                $DeviceSubTypeBytes = $DevicePathBytes[$FilePathEntryIndex + 1]
+                $DeviceSubType = $HardwareDeviceSubTypeMapping[$DeviceSubTypeBytes]
+                if (!$DeviceSubType) {
+                    $DeviceSubType = $DeviceSubTypeBytes.ToString('X2')
+                }
 
                 switch ($DeviceSubType) {
                     'HW_PCI_DP' {
@@ -1208,7 +1212,6 @@ function Get-EfiDevicePathProtocol {
                     }
 
                     default {
-                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
                         $CurrentDevice = $null
 
@@ -1222,7 +1225,11 @@ function Get-EfiDevicePathProtocol {
             }
 
             'ACPI_DEVICE_PATH' {
-                $DeviceSubType = $ACPIDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+                $DeviceSubTypeBytes = $DevicePathBytes[$FilePathEntryIndex + 1]
+                $DeviceSubType = $ACPIDeviceSubTypeMapping[$DeviceSubTypeBytes]
+                if (!$DeviceSubType) {
+                    $DeviceSubType = $DeviceSubTypeBytes.ToString('X2')
+                }
 
                 switch ($DeviceSubType) {
                     'ACPI_DP' {
@@ -1318,7 +1325,6 @@ function Get-EfiDevicePathProtocol {
                     }
 
                     default {
-                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
                         $CurrentDevice = $null
 
@@ -1332,7 +1338,11 @@ function Get-EfiDevicePathProtocol {
             }
 
             'MEDIA_DEVICE_PATH' {
-                $DeviceSubType = $MediaDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+                $DeviceSubTypeBytes = $DevicePathBytes[$FilePathEntryIndex + 1]
+                $DeviceSubType = $MediaDeviceSubTypeMapping[$DeviceSubTypeBytes]
+                if (!$DeviceSubType) {
+                    $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+                }
 
                 switch ($DeviceSubType) {
                     'MEDIA_HARDDRIVE_DP' {
@@ -1487,7 +1497,6 @@ function Get-EfiDevicePathProtocol {
                     }
 
                     default {
-                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
@@ -1500,7 +1509,11 @@ function Get-EfiDevicePathProtocol {
             }
 
             'MESSAGING_DEVICE_PATH' {
-                $DeviceSubType = $MessagingDeviceSubTypeMapping[$DevicePathBytes[$FilePathEntryIndex + 1]]
+                $DeviceSubTypeBytes = $DevicePathBytes[$FilePathEntryIndex + 1]
+                $DeviceSubType = $MessagingDeviceSubTypeMapping[$DeviceSubTypeBytes]
+                if (!$DeviceSubType) {
+                    $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
+                }
 
                 # too much effort to parse them all...
                 switch ($DeviceSubType) {
@@ -1648,7 +1661,6 @@ function Get-EfiDevicePathProtocol {
                     }
 
                     default {
-                        $DeviceSubType = $DevicePathBytes[$FilePathEntryIndex + 1].ToString('X2')
                         $DeviceInfo = [PSCustomObject] @{ RawDeviceBytes = $DataBytes }
 
                         [PSCustomObject] @{
