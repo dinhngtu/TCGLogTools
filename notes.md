@@ -13,7 +13,7 @@ The `EV_EFI_BOOT_SERVICES_APPLICATION` event hash corresponds to the Authenticod
 
 ### PCR7 event indicating updated certificate
 
-```
+```json
 {
   "PCR": 7,
 >>"EventType": "EV_EFI_VARIABLE_DRIVER_CONFIG",
@@ -43,7 +43,7 @@ The `EV_EFI_BOOT_SERVICES_APPLICATION` event hash corresponds to the Authenticod
 
 ### PCR7/PCR4 events indicating that the system booted with the updated "Windows UEFI CA 2023"-signed Boot Manager
 
-```
+```json
 {
   "PCR": 7,
 >>"EventType": "EV_EFI_VARIABLE_AUTHORITY",
@@ -116,7 +116,7 @@ s:\efi\microsoft\boot\bootmgfw.efi:
 
 ### PCR7 event indicating successful revocation of vulnerable boot managers
 
-```
+```json
 {
   "PCR": 7,
 >>"EventType": "EV_EFI_VARIABLE_DRIVER_CONFIG",
@@ -145,3 +145,20 @@ s:\efi\microsoft\boot\bootmgfw.efi:
 ```
 
 Note that [EventType isn’t part of the Digest and can be freely modified by an attacker](https://github.com/google/go-attestation/blob/master/docs/event-log-disclosure.md).
+
+## WindowsBootChainSvn rollback detection
+
+The EFI variable `77fa9abd-0359-4d32-bd60-28f4e78f784b WindowsBootChainSvn` (NV, BS) contains the current SVN:
+
+```
+0000000: 0100 0000                                ....
+```
+
+Setting it to an unacceptable value (e.g. `05 00 00 00`) will not cause a boot failure but will log an error in SIPA:
+
+```json
+{
+  "SIPAEventType": "SVNChainStatus",
+  "SIPAEventData": 3221225506 // STATUS_ACCESS_DENIED
+},
+```
